@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenFolio – Investir simplement | 1 CHF/jour</title>
+    <meta
+      name="description"
+      content="Suivez des portefeuilles réels gérés par Philippe Beckers (ARIF). Horizon long TERME, diversification thématique et discipline Buy & Hold – pour 1 CHF/jour."
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        /* Primary Brand Colors */
+        --primary-yellow: #ffb500;
+        --primary-yellow-dark: #e5a200;
+        --primary-yellow-light: #ffc932;
+        --primary-yellow-soft: #fff4d6;
+
+        /* Neutral Palette */
+        --dark-gray: #1a1a1a;
+        --mid-gray: #2a2a2a;
+        --light-gray: #f8f9fa;
+        --border-gray: #e5e7eb;
+        --text-primary: #1a1a1a;
+        --text-secondary: #4b5563;
+        --text-muted: #6b7280;
+        --white: #ffffff;
+
+        /* Enhanced Shadows */
+        --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05),
+          0 2px 4px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1),
+          0 4px 6px rgba(0, 0, 0, 0.05);
+        --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1),
+          0 8px 10px rgba(0, 0, 0, 0.04);
+        --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+
+        /* Border Radius Scale */
+        --radius-xs: 4px;
+        --radius-sm: 6px;
+        --radius: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --radius-2xl: 24px;
+        --radius-full: 9999px;
+
+        /* Spacing Scale */
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-5: 1.25rem;
+        --space-6: 1.5rem;
+        --space-8: 2rem;
+        --space-10: 2.5rem;
+        --space-12: 3rem;
+        --space-16: 4rem;
+        --space-20: 5rem;
+        --space-24: 6rem;
+        --space-32: 8rem;
+
+        /* Typography Scale */
+        --text-xs: 0.75rem;
+        --text-sm: 0.875rem;
+        --text-base: 1rem;
+        --text-lg: 1.125rem;
+        --text-xl: 1.25rem;
+        --text-2xl: 1.5rem;
+        --text-3xl: 1.875rem;
+        --text-4xl: 2.25rem;
+        --text-5xl: 3rem;
+        --text-6xl: 3.75rem;
+
+        /* Transitions */
+        --transition-fast: 150ms ease-out;
+        --transition-base: 250ms ease-out;
+        --transition-slow: 350ms ease-out;
+
+        /* Gradients */
+        --gradient-primary: linear-gradient(
+          135deg,
+          var(--primary-yellow) 0%,
+          var(--primary-yellow-light) 100%
+        );
+        --gradient-dark: linear-gradient(
+          135deg,
+          var(--dark-gray) 0%,
+          var(--mid-gray) 100%
+        );
+        --gradient-light: linear-gradient(
+          135deg,
+          #ffffff 0%,
+          var(--light-gray) 100%
+        );
+      }
+
+      body {
+        font-family: 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          Roboto, 'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.7;
+        color: var(--text-primary);
+        overflow-x: hidden;
+        background: var(--white);
+        font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        scroll-behavior: smooth;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.2;
+        letter-spacing: -0.025em;
+        margin: 0;
+      }
+
+      h1 {
+        font-size: var(--text-5xl);
+      }
+      h2 {
+        font-size: var(--text-4xl);
+      }
+      h3 {
+        font-size: var(--text-2xl);
+      }
+      h4 {
+        font-size: var(--text-xl);
+      }
+
+      .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 var(--space-6);
+      }
+
+      @media (min-width: 640px) {
+        .container {
+          padding: 0 var(--space-8);
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .container {
+          padding: 0 var(--space-12);
+        }
+      }
+
+      /* Top bar */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(26, 26, 26, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        color: var(--white);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all var(--transition-base);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: var(--space-4) 0;
+        min-height: 72px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        font-weight: 700;
+        font-size: var(--text-lg);
+        transition: all var(--transition-base);
+      }
+
+      .brand:hover {
+        transform: translateY(-1px);
+      }
+
+      .brand .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        display: inline-block;
+        box-shadow: 0 0 0 4px rgba(255, 181, 0, 0.2);
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .lang-switch {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-3);
+      }
+
+      .lang-switch label {
+        font-size: var(--text-sm);
+        color: var(--white);
+        opacity: 0.8;
+      }
+
+      .lang-switch select {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--white);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-md);
+        padding: var(--space-2) var(--space-3);
+        font-weight: 600;
+        font-size: var(--text-sm);
+        transition: all var(--transition-base);
+        cursor: pointer;
+      }
+
+      .lang-switch select:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--primary-yellow);
+      }
+
+      .lang-switch select:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.2);
+        border-color: var(--primary-yellow);
+        box-shadow: 0 0 0 3px rgba(255, 181, 0, 0.3);
+      }
+
+      /* Hero */
+      .hero {
+        background: var(--gradient-dark);
+        color: var(--white);
+        padding: var(--space-24) 0 var(--space-32);
+        position: relative;
+        overflow: hidden;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23FFB500" fill-opacity="0.03"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>')
+          repeat;
+        opacity: 0.4;
+        animation: float 20s ease-in-out infinite;
+      }
+
+      .hero::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+            circle at 20% 80%,
+            rgba(255, 181, 0, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 181, 0, 0.05) 0%,
+            transparent 50%
+          );
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-10px) rotate(1deg);
+        }
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        max-width: 1024px;
+        margin: 0 auto;
+      }
+
+      .hero h1 {
+        font-size: clamp(var(--text-3xl), 5vw, var(--text-6xl));
+        line-height: 1.1;
+        margin-bottom: var(--space-6);
+        color: var(--white);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        background: linear-gradient(
+          135deg,
+          #ffffff 0%,
+          rgba(255, 255, 255, 0.8) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .hero .subtitle {
+        font-size: clamp(var(--text-lg), 2.5vw, var(--text-xl));
+        max-width: 700px;
+        margin: 0 auto var(--space-10);
+        opacity: 0.9;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .badge {
+        background: var(--gradient-primary);
+        color: var(--dark-gray);
+        border-radius: var(--radius-full);
+        padding: var(--space-5) var(--space-8);
+        display: inline-flex;
+        align-items: baseline;
+        gap: var(--space-2);
+        box-shadow: var(--shadow-xl);
+        font-weight: 700;
+        margin: var(--space-10) auto var(--space-12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+        transform: perspective(1000px) rotateX(5deg);
+        transition: all var(--transition-base);
+      }
+
+      .badge::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.4),
+          transparent
+        );
+        transition: left 0.7s ease;
+      }
+
+      .badge:hover::before {
+        left: 100%;
+      }
+
+      .badge:hover {
+        transform: perspective(1000px) rotateX(0deg) translateY(-2px);
+        box-shadow: var(--shadow-2xl);
+      }
+
+      .badge .price {
+        font-size: var(--text-3xl);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .badge .period {
+        font-size: var(--text-base);
+        opacity: 0.8;
+        font-weight: 600;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+        justify-content: center;
+        margin-top: var(--space-2);
+      }
+
+      .btn {
+        position: relative;
+        background: var(--gradient-primary);
+        color: var(--dark-gray);
+        padding: var(--space-4) var(--space-8);
+        border: none;
+        border-radius: var(--radius-lg);
+        font-weight: 700;
+        letter-spacing: 0.025em;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: var(--shadow-lg);
+        transition: all var(--transition-base);
+        text-transform: uppercase;
+        font-size: var(--text-sm);
+        min-width: 160px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.2) 0%,
+          transparent 50%
+        );
+        opacity: 0;
+        transition: opacity var(--transition-base);
+      }
+
+      .btn:hover::before {
+        opacity: 1;
+      }
+
+      .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-2xl);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .btn:active {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .btn.outline {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid var(--primary-yellow);
+        color: var(--primary-yellow);
+        backdrop-filter: blur(10px);
+      }
+
+      .btn.outline:hover {
+        background: var(--primary-yellow);
+        color: var(--dark-gray);
+        border-color: var(--primary-yellow);
+      }
+      .trust {
+        margin-top: var(--space-16);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--space-8);
+        flex-wrap: wrap;
+        opacity: 0.9;
+      }
+
+      .trust .item {
+        display: inline-flex;
+        gap: var(--space-3);
+        align-items: center;
+        padding: var(--space-3) var(--space-6);
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-lg);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all var(--transition-base);
+        font-size: var(--text-sm);
+        font-weight: 600;
+      }
+
+      .trust .item:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+        border-color: rgba(255, 181, 0, 0.3);
+      }
+
+      /* Principles */
+      .principles {
+        background: var(--gradient-light);
+        padding: var(--space-24) 0;
+        position: relative;
+      }
+
+      .principles::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+          circle at 30% 20%,
+          rgba(255, 181, 0, 0.05) 0%,
+          transparent 50%
+        );
+      }
+
+      .section-title {
+        text-align: center;
+        font-size: clamp(var(--text-3xl), 4vw, var(--text-5xl));
+        margin-bottom: var(--space-16);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+        position: relative;
+      }
+
+      .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -var(--space-4);
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 4px;
+        background: var(--gradient-primary);
+        border-radius: var(--radius-full);
+      }
+
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: var(--space-8);
+        position: relative;
+        z-index: 1;
+      }
+
+      .card {
+        background: var(--white);
+        border-radius: var(--radius-2xl);
+        padding: var(--space-10) var(--space-8);
+        border: 1px solid var(--border-gray);
+        box-shadow: var(--shadow-md);
+        transition: all var(--transition-base);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--gradient-primary);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform var(--transition-base);
+      }
+
+      .card:hover::before {
+        transform: scaleX(1);
+      }
+
+      .card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary-yellow-light);
+      }
+
+      .card .icon {
+        font-size: var(--text-4xl);
+        margin-bottom: var(--space-6);
+        display: block;
+        filter: grayscale(0.2);
+      }
+
+      .card h3 {
+        font-size: var(--text-2xl);
+        margin-bottom: var(--space-4);
+        color: var(--text-primary);
+        font-weight: 700;
+      }
+
+      .card p {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        font-size: var(--text-base);
+      }
+
+      /* Solution */
+      .solution {
+        background: #fff;
+        padding: 88px 0;
+      }
+      .solution-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 56px;
+        align-items: center;
+      }
+      .solution h2 {
+        font-size: 2rem;
+        margin-bottom: 18px;
+      }
+      .solution > p,
+      .solution .lead {
+        color: var(--text-gray);
+        margin-bottom: 22px;
+      }
+      .features {
+        list-style: none;
+        margin-top: 12px;
+      }
+      .features li {
+        padding: 18px 0;
+        border-bottom: 1px solid var(--light-gray);
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+      }
+      .features li:last-child {
+        border-bottom: none;
+      }
+      .feature-dot {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--primary-yellow);
+        color: var(--dark-gray);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      /* Phone mock */
+      .phone-mock {
+        text-align: center;
+      }
+      .phone {
+        background: var(--dark-gray);
+        border-radius: 28px;
+        padding: 22px;
+        display: inline-block;
+        box-shadow: var(--shadow-medium);
+      }
+      .screen {
+        background: #fff;
+        border-radius: 20px;
+        padding: 28px 20px;
+        width: 280px;
+        height: 500px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .p-card {
+        background: var(--light-gray);
+        border-radius: var(--radius);
+        padding: 14px;
+        text-align: left;
+      }
+      .p-card h4 {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+      }
+      .p-perf {
+        color: var(--primary-yellow);
+        font-weight: 700;
+      }
+      .p-card small {
+        color: var(--text-gray);
+        font-size: 0.75rem;
+      }
+
+      /* About Philippe */
+      .about {
+        background: #fff;
+        padding: 20px 0 0;
+      }
+      .about-inner {
+        background: #fafafa;
+        border: 1px solid #eee;
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 24px;
+        align-items: start;
+      }
+      .about-badge {
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-weight: 700;
+      }
+
+      /* Pricing */
+      .pricing {
+        background: #fff;
+        padding: 88px 0;
+        text-align: center;
+      }
+      .price-card {
+        max-width: 440px;
+        margin: 0 auto;
+        border: 2px solid var(--primary-yellow);
+        border-radius: var(--radius-lg);
+        padding: 40px 28px;
+        position: relative;
+        box-shadow: var(--shadow-medium);
+      }
+      .badge-pop {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--primary-yellow);
+        color: var(--dark-gray);
+        padding: 8px 20px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+      }
+      .price-amt {
+        font-size: 3.1rem;
+        color: var(--primary-yellow);
+        margin: 18px 0;
+        font-weight: 700;
+      }
+      .price-card p {
+        color: var(--text-gray);
+      }
+      .price-features {
+        list-style: none;
+        text-align: left;
+        margin: 26px 0;
+      }
+      .price-features li {
+        display: flex;
+        gap: 10px;
+        padding: 10px 0;
+      }
+
+      /* FAQ */
+      .faq {
+        background: var(--light-gray);
+        padding: 88px 0;
+      }
+      .faq-items {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+      .faq-item {
+        background: #fff;
+        margin-bottom: 14px;
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-light);
+      }
+      .faq-q {
+        padding: 22px;
+        cursor: pointer;
+        font-weight: 700;
+        background: #fff;
+        border: none;
+        width: 100%;
+        text-align: left;
+        font-size: 1.05rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--dark-gray);
+        font-family: inherit;
+      }
+      .faq-q:hover {
+        background: #f8f8f8;
+      }
+      .faq-q span {
+        color: var(--primary-yellow);
+        font-weight: 700;
+        font-size: 1.25rem;
+      }
+      .faq-a {
+        padding: 0 22px 22px;
+        color: var(--text-gray);
+        display: none;
+      }
+
+      /* CTA */
+      .final-cta {
+        background: var(--dark-gray);
+        color: var(--white);
+        text-align: center;
+        padding: 84px 0;
+      }
+      .final-cta h2 {
+        color: var(--white);
+        font-size: 2.2rem;
+        margin-bottom: 16px;
+      }
+      .final-cta p {
+        opacity: 0.92;
+        margin-bottom: 28px;
+      }
+
+      /* Footer */
+      footer {
+        background: var(--dark-gray);
+        color: var(--white);
+        padding: 44px 0;
+        text-align: center;
+        border-top: 1px solid #333;
+      }
+      footer p {
+        opacity: 0.85;
+        font-size: 0.95rem;
+      }
+      .disclaimer {
+        max-width: 980px;
+        margin: 12px auto 0;
+        font-size: 0.85rem;
+        opacity: 0.75;
+        line-height: 1.5;
+      }
+
+      /* Animations */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate {
+        animation: fadeInUp 0.6s ease-out both;
+      }
+      .scroll-animate {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s ease-out;
+      }
+      .scroll-animate.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Enhanced Responsive Design */
+
+      /* Large screens and up */
+      @media (min-width: 1440px) {
+        .container {
+          max-width: 1440px;
+          padding: 0 var(--space-16);
+        }
+
+        .hero h1 {
+          font-size: var(--text-6xl);
+        }
+
+        .card-grid {
+          grid-template-columns: repeat(3, 1fr);
+          gap: var(--space-12);
+        }
+      }
+
+      /* Desktop */
+      @media (max-width: 1024px) {
+        .hero {
+          padding: var(--space-20) 0 var(--space-24);
+          min-height: 90vh;
+        }
+
+        .solution-content {
+          grid-template-columns: 1fr;
+          gap: var(--space-16);
+        }
+
+        .about-inner {
+          grid-template-columns: 1fr;
+          gap: var(--space-8);
+        }
+
+        .card-grid {
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: var(--space-6);
+        }
+      }
+
+      /* Tablets */
+      @media (max-width: 768px) {
+        .hero {
+          padding: var(--space-16) 0 var(--space-20);
+          min-height: 80vh;
+        }
+
+        .hero h1 {
+          font-size: clamp(var(--text-2xl), 8vw, var(--text-4xl));
+          margin-bottom: var(--space-4);
+        }
+
+        .hero .subtitle {
+          font-size: var(--text-lg);
+          margin-bottom: var(--space-8);
+        }
+
+        .badge {
+          margin: var(--space-8) auto var(--space-10);
+          padding: var(--space-4) var(--space-6);
+        }
+
+        .badge .price {
+          font-size: var(--text-2xl);
+        }
+
+        .actions {
+          flex-direction: column;
+          align-items: center;
+          gap: var(--space-3);
+        }
+
+        .btn {
+          width: 100%;
+          max-width: 280px;
+          padding: var(--space-4) var(--space-6);
+        }
+
+        .trust {
+          margin-top: var(--space-12);
+          gap: var(--space-4);
+        }
+
+        .trust .item {
+          padding: var(--space-2) var(--space-4);
+          font-size: var(--text-xs);
+        }
+
+        .section-title {
+          font-size: clamp(var(--text-2xl), 6vw, var(--text-3xl));
+          margin-bottom: var(--space-12);
+        }
+
+        .card-grid {
+          grid-template-columns: 1fr;
+          gap: var(--space-6);
+        }
+
+        .card {
+          padding: var(--space-8) var(--space-6);
+        }
+
+        .topbar-inner {
+          padding: var(--space-3) 0;
+          min-height: 64px;
+        }
+
+        .brand {
+          font-size: var(--text-base);
+        }
+
+        .lang-switch {
+          gap: var(--space-2);
+        }
+
+        .lang-switch select {
+          padding: var(--space-1) var(--space-2);
+          font-size: var(--text-xs);
+        }
+      }
+
+      /* Mobile phones */
+      @media (max-width: 480px) {
+        .container {
+          padding: 0 var(--space-4);
+        }
+
+        .hero {
+          padding: var(--space-12) 0 var(--space-16);
+          min-height: 70vh;
+        }
+
+        .hero h1 {
+          font-size: var(--text-2xl);
+          line-height: 1.2;
+        }
+
+        .hero .subtitle {
+          font-size: var(--text-base);
+        }
+
+        .badge {
+          padding: var(--space-3) var(--space-5);
+          margin: var(--space-6) auto var(--space-8);
+        }
+
+        .badge .price {
+          font-size: var(--text-xl);
+        }
+
+        .badge .period {
+          font-size: var(--text-sm);
+        }
+
+        .trust {
+          flex-direction: column;
+          gap: var(--space-3);
+          margin-top: var(--space-8);
+        }
+
+        .trust .item {
+          padding: var(--space-2) var(--space-3);
+          font-size: var(--text-xs);
+          min-width: 120px;
+          justify-content: center;
+        }
+
+        .section-title {
+          font-size: var(--text-2xl);
+          margin-bottom: var(--space-8);
+        }
+
+        .card {
+          padding: var(--space-6) var(--space-4);
+        }
+
+        .card .icon {
+          font-size: var(--text-3xl);
+          margin-bottom: var(--space-4);
+        }
+
+        .card h3 {
+          font-size: var(--text-xl);
+          margin-bottom: var(--space-3);
+        }
+
+        .topbar-inner {
+          min-height: 56px;
+          padding: var(--space-2) 0;
+        }
+
+        .brand {
+          font-size: var(--text-sm);
+          gap: var(--space-2);
+        }
+
+        .brand .dot {
+          width: 10px;
+          height: 10px;
+        }
+      }
+
+      /* Extra small devices */
+      @media (max-width: 320px) {
+        .hero h1 {
+          font-size: var(--text-xl);
+        }
+
+        .badge .price {
+          font-size: var(--text-lg);
+        }
+
+        .section-title {
+          font-size: var(--text-xl);
+        }
+      }
+
+      /* A11y */
+      .btn:focus,
+      .faq-q:focus,
+      .lang-switch select:focus {
+        outline: 2px solid var(--primary-yellow);
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Topbar with language switcher -->
+    <div class="topbar" role="navigation" aria-label="top bar">
+      <div class="topbar-inner container">
+        <div class="brand">
+          <span class="dot" aria-hidden="true"></span> <span>OpenFolio</span>
+        </div>
+        <div class="lang-switch">
+          <label for="langSwitcher" id="langLabel">Langue</label>
+          <select id="langSwitcher" aria-labelledby="langLabel">
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content animate">
+          <h1 data-i18n="hero_title">
+            Suivez des portefeuilles réels, en toute transparence
+          </h1>
+          <p class="subtitle" data-i18n="hero_sub">
+            Je suis Philippe Beckers, background technologique, plus de 30 ans
+            d’expérience d’investissement. Membre ARIF et inscrit au registre
+            suisse des conseillers à la clientèle. Ma méthode : horizon long
+            TERME, diversification thématique, discipline « Buy & Hold ».
+          </p>
+          <div class="badge">
+            <span class="price">1 CHF</span>
+            <span class="period" data-i18n="price_period">par jour</span>
+          </div>
+          <div class="actions">
+            <a href="/payment" class="btn" data-i18n="cta_start"
+              >Commencer aujourd'hui</a
+            >
+            <a href="#solution" class="btn outline" data-i18n="cta_learn"
+              >En savoir plus</a
+            >
+          </div>
+          <div class="trust" aria-label="indicateurs de confiance">
+            <div class="item">
+              <span aria-hidden>📊</span
+              ><span data-i18n="trust_transparency">100% transparence</span>
+            </div>
+            <div class="item">
+              <span aria-hidden>🎓</span
+              ><span data-i18n="trust_learn">Apprenez en suivant</span>
+            </div>
+            <div class="item">
+              <span aria-hidden>💪</span
+              ><span data-i18n="trust_expert">Méthode éprouvée</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Philippe -->
+    <section class="about" id="about">
+      <div class="container">
+        <div class="about-inner scroll-animate">
+          <div>
+            <h2 data-i18n="about_title">À propos de Philippe</h2>
+            <p data-i18n="about_text">
+              Ingénieur de formation avec un background en technologie et plus
+              de 30 ans d’expérience d’investissement. Agréé par l’Association
+              Romande des Intermédiaires Financiers (ARIF) et inscrit au
+              Registre suisse des conseillers financiers à la clientèle.
+            </p>
+            <div class="about-badge" aria-label="accéditations">
+              <span>✅</span>
+              <span data-i18n="about_badge"
+                >ARIF & Registre des conseillers</span
+              >
+            </div>
+          </div>
+          <div>
+            <h3 data-i18n="about_promise_title">Ce que vous obtenez</h3>
+            <p data-i18n="about_promise_text">
+              Des portefeuilles thématiques que j’investis avec mes propres
+              fonds : crypto (directe ou via entreprises/produits exposés),
+              technologies innovantes/disruptives et immobilier suisse via des
+              fonds cotés défiscalisés.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Principles -->
+    <section class="principles" id="principles">
+      <div class="container">
+        <h2 class="section-title scroll-animate" data-i18n="principles_title">
+          Mon approche d’investissement
+        </h2>
+        <div class="card-grid">
+          <div class="card scroll-animate">
+            <div class="icon">📆</div>
+            <h3 data-i18n="p1_title">Horizon d’investissement long TERME</h3>
+            <p data-i18n="p1_text">
+              La bourse n’est pas un loto : elle évolue selon l’économie, la
+              géopolitique, les innovations et les cycles. À l’ère de l’IA et du
+              trading algorithmique, spéculer devient difficile ; il faut
+              investir sur la durée, « surfer » les tendances et sortir aux bons
+              moments.
+            </p>
+          </div>
+          <div class="card scroll-animate">
+            <div class="icon">🧭</div>
+            <h3 data-i18n="p2_title">Diversification stratégique</h3>
+            <p data-i18n="p2_text">
+              Accédez à des portefeuilles thématiques : crypto, nouvelles
+              technologies et immobilier suisse (fonds cotés défiscalisés). Les
+              combiner élargit la diversification sectorielle et géographique,
+              réduit la volatilité et augmente les chances de performance. Les
+              cryptos sont par exemple décorrélées de l’immobilier suisse. Vous
+              pouvez aussi faire du « cherry picking » si vous démarrez petit.
+            </p>
+          </div>
+          <div class="card scroll-animate">
+            <div class="icon">🏁</div>
+            <h3 data-i18n="p3_title">Discipline « Buy & Hold »</h3>
+            <p data-i18n="p3_text">
+              Pas de day trading. On achète au bon timing et on garde plusieurs
+              mois/années. Les ventes peuvent être déclenchées par :
+              retournement de marché (choc géopolitique/éco), fin de cycle
+              (p. ex. cycle de 4 ans du Bitcoin), prise de bénéfices ou nouvelle
+              dégradant le potentiel d’un titre.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Solution -->
+    <section class="solution" id="solution">
+      <div class="container">
+        <div class="solution-content">
+          <div class="scroll-animate">
+            <h2 data-i18n="solution_title">OpenFolio, sans bruit ni jargon</h2>
+            <p class="lead" data-i18n="solution_lead">
+              Abonnement simple pour suivre mes portefeuilles thématiques,
+              adaptés à votre profil de risque, avec alertes en temps réel et
+              explications claires.
+            </p>
+            <ul class="features">
+              <li>
+                <div class="feature-dot">1</div>
+                <div>
+                  <strong data-i18n="feat1_t">Transparence en direct</strong> —
+                  <span data-i18n="feat1_d"
+                    >voyez chaque mouvement et la raison derrière.</span
+                  >
+                </div>
+              </li>
+              <li>
+                <div class="feature-dot">2</div>
+                <div>
+                  <strong data-i18n="feat2_t">Suivi pédagogique</strong> —
+                  <span data-i18n="feat2_d"
+                    >apprenez en observant des décisions réelles, sans
+                    jargon.</span
+                  >
+                </div>
+              </li>
+              <li>
+                <div class="feature-dot">3</div>
+                <div>
+                  <strong data-i18n="feat3_t">Synthèses mensuelles</strong> —
+                  <span data-i18n="feat3_d"
+                    >bilan des performances et des tendances.</span
+                  >
+                </div>
+              </li>
+              <li>
+                <div class="feature-dot">4</div>
+                <div>
+                  <strong data-i18n="feat4_t">Vous gardez le contrôle</strong> —
+                  <span data-i18n="feat4_d"
+                    >aucun lien bancaire requis ; vous décidez quand et comment
+                    investir.</span
+                  >
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="phone-mock scroll-animate">
+            <div class="phone">
+              <div class="screen">
+                <div style="text-align: center; margin-bottom: 10px">
+                  <h3>🌟 OpenFolio</h3>
+                </div>
+                <div class="p-card">
+                  <h4 data-i18n="pm1_t">Portefeuille Croissance Équilibrée</h4>
+                  <div class="p-perf" data-i18n="pm1_p">
+                    Exemple : +12,3% YTD
+                  </div>
+                  <small data-i18n="pm1_s"
+                    >Dernière note : renforcement sur grandes capitalisations
+                    tech</small
+                  >
+                </div>
+                <div class="p-card">
+                  <h4 data-i18n="pm2_t">Tech Innovation</h4>
+                  <div class="p-perf" data-i18n="pm2_p">
+                    Exemple : +18,7% YTD
+                  </div>
+                  <small data-i18n="pm2_s"
+                    >Alerte : nouvelle position semi-conducteurs</small
+                  >
+                </div>
+                <div class="p-card">
+                  <h4 data-i18n="pm3_t">Immobilier Suisse (fonds cotés)</h4>
+                  <div class="p-perf" data-i18n="pm3_p">
+                    Exemple : +7,2% YTD
+                  </div>
+                  <small data-i18n="pm3_s">Flux de dividendes réguliers</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing" id="pricing">
+      <div class="container">
+        <h2 class="section-title scroll-animate" data-i18n="pricing_title">
+          Investir simplement
+        </h2>
+        <div class="price-card scroll-animate">
+          <div class="badge-pop" data-i18n="pricing_badge">Le plus choisi</div>
+          <h3 data-i18n="pricing_name">OpenFolio Premium</h3>
+          <div class="price-amt">
+            1 CHF<span style="font-size: 1rem"
+              >/<span data-i18n="price_unit">jour</span></span
+            >
+          </div>
+          <p data-i18n="pricing_sub">
+            Moins qu’un café. Conçu pour faire grandir votre capital.
+          </p>
+          <ul class="price-features">
+            <li>
+              ✅
+              <span data-i18n="pf1"
+                >Accès aux portefeuilles thématiques de Philippe</span
+              >
+            </li>
+            <li>✅ <span data-i18n="pf2">Alertes en temps réel</span></li>
+            <li>
+              ✅
+              <span data-i18n="pf3"
+                >Transparence complète sur chaque mouvement</span
+              >
+            </li>
+            <li>
+              ✅ <span data-i18n="pf4">Rapports mensuels de performance</span>
+            </li>
+            <li>✅ <span data-i18n="pf5">Contenus pédagogiques</span></li>
+            <li>✅ <span data-i18n="pf6">Application mobile</span></li>
+            <li>✅ <span data-i18n="pf7">Résiliation à tout moment</span></li>
+          </ul>
+          <a
+            href="/payment"
+            class="btn"
+            style="width: 100%"
+            data-i18n="cta_start"
+            >Commencer aujourd'hui</a
+          >
+          <p
+            style="margin-top: 12px; color: #666; font-size: 0.9rem"
+            data-i18n="pricing_note"
+          >
+            Sans engagement long terme. Annulation à tout moment.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq" id="faq">
+      <div class="container">
+        <h2 class="section-title scroll-animate" data-i18n="faq_title">
+          Questions fréquentes
+        </h2>
+        <div class="faq-items">
+          <div class="faq-item scroll-animate">
+            <button class="faq-q">
+              <span data-i18n="q1">Dois-je lier mon compte bancaire ?</span
+              ><span>+</span>
+            </button>
+            <div class="faq-a">
+              <p data-i18n="a1">
+                Non. OpenFolio n’exige aucun lien bancaire ni données
+                financières personnelles. Vous suivez les portefeuilles et
+                décidez vous-même d’investir.
+              </p>
+            </div>
+          </div>
+          <div class="faq-item scroll-animate">
+            <button class="faq-q">
+              <span data-i18n="q2">Comment OpenFolio se rémunère ?</span
+              ><span>+</span>
+            </button>
+            <div class="faq-a">
+              <p data-i18n="a2">
+                Par un abonnement simple de 1 CHF/jour donnant accès aux
+                portefeuilles, aux alertes et aux contenus pédagogiques. Aucun
+                pourcentage ni frais cachés.
+              </p>
+            </div>
+          </div>
+          <div class="faq-item scroll-animate">
+            <button class="faq-q">
+              <span data-i18n="q3">Et si je débute totalement ?</span
+              ><span>+</span>
+            </button>
+            <div class="faq-a">
+              <p data-i18n="a3">
+                C’est justement l’objectif : apprendre en suivant des décisions
+                réelles, expliquées simplement. Pas besoin de diplôme en
+                finance.
+              </p>
+            </div>
+          </div>
+          <div class="faq-item scroll-animate">
+            <button class="faq-q">
+              <span data-i18n="q4"
+                >Puis-je choisir seulement quelques positions ?</span
+              ><span>+</span>
+            </button>
+            <div class="faq-a">
+              <p data-i18n="a4">
+                Oui, vous pouvez faire du « cherry picking » – par exemple 1‑2
+                cryptos et 1 fonds immobilier pour démarrer avec une mise
+                limitée.
+              </p>
+            </div>
+          </div>
+          <div class="faq-item scroll-animate">
+            <button class="faq-q">
+              <span data-i18n="q5">Qu’est‑ce qui déclenche une vente ?</span
+              ><span>+</span>
+            </button>
+            <div class="faq-a">
+              <p data-i18n="a5">
+                Un retournement de marché, la fin d’un cycle (p. ex. cycle de 4
+                ans du Bitcoin), une prise de bénéfices ou une nouvelle qui
+                dégrade le potentiel d’un titre.
+              </p>
+            </div>
+          </div>
+          <div class="faq-item scroll-animate">
+            <button class="faq-q">
+              <span data-i18n="q6">Puis‑je annuler à tout moment ?</span
+              ><span>+</span>
+            </button>
+            <div class="faq-a">
+              <p data-i18n="a6">
+                Oui. L’abonnement est sans engagement long terme et résiliable à
+                tout moment.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+      <div class="container">
+        <h2 data-i18n="final_title">Prêt à investir plus intelligemment ?</h2>
+        <p data-i18n="final_sub">
+          Rejoignez des investisseurs qui privilégient la transparence et la
+          discipline sur le bruit.
+        </p>
+        <a href="/payment" class="btn" data-i18n="final_cta"
+          >Commencer – 1 CHF/jour</a
+        >
+        <p style="margin-top: 14px; opacity: 0.8" data-i18n="final_note">
+          Sans engagement. Annulation simple, à tout moment.
+        </p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <p>
+          &copy; <span id="year"></span> OpenFolio.
+          <span data-i18n="rights">Tous droits réservés.</span>
+        </p>
+        <p class="disclaimer" data-i18n="disclaimer">
+          Informations fournies par Philippe Beckers. Rien de ce qui est
+          présenté ne constitue un conseil en investissement. Les performances
+          passées ne préjugent pas des performances futures. Vous restez seul
+          responsable de vos décisions d’investissement.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      // Utility: smooth scroll for anchors
+      document.querySelectorAll('a[href^="#"]').forEach((a) => {
+        a.addEventListener('click', (e) => {
+          const target = document.querySelector(a.getAttribute('href'));
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      });
+
+      // FAQ toggles
+      document.querySelectorAll('.faq-q').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const ans = btn.parentElement.querySelector('.faq-a');
+          const icon = btn.querySelector('span:last-child');
+          const isOpen = ans.style.display === 'block';
+          ans.style.display = isOpen ? 'none' : 'block';
+          icon.textContent = isOpen ? '+' : '−';
+        });
+      });
+
+      // Scroll animations via IntersectionObserver
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) entry.target.classList.add('visible');
+          });
+        },
+        { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+      );
+      document
+        .querySelectorAll('.scroll-animate')
+        .forEach((el) => io.observe(el));
+
+      // Year
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // i18n dictionary
+      const i18n = {
+        fr: {
+          _meta_title: 'OpenFolio – Investir simplement | 1 CHF/jour',
+          _meta_desc:
+            'Suivez des portefeuilles réels gérés par Philippe Beckers (ARIF). Horizon long TERME, diversification thématique et Buy & Hold – 1 CHF/jour.',
+          hero_title: 'Suivez des portefeuilles réels, en toute transparence',
+          hero_sub:
+            'Je suis Philippe Beckers, background technologique, plus de 30 ans d’expérience d’investissement. Membre ARIF et inscrit au registre suisse des conseillers à la clientèle. Ma méthode : horizon long TERME, diversification thématique, discipline « Buy & Hold ».',
+          price_period: 'par jour',
+          cta_start: 'Commencer aujourd’hui',
+          cta_learn: 'En savoir plus',
+          trust_transparency: '100% transparence',
+          trust_learn: 'Apprenez en suivant',
+          trust_expert: 'Méthode éprouvée',
+          about_title: 'À propos de Philippe',
+          about_text:
+            'Ingénieur de formation avec un background en technologie et plus de 30 ans d’expérience d’investissement. Agréé par l’Association Romande des Intermédiaires Financiers (ARIF) et inscrit au Registre suisse des conseillers financiers à la clientèle.',
+          about_badge: 'ARIF & Registre des conseillers',
+          about_promise_title: 'Ce que vous obtenez',
+          about_promise_text:
+            'Des portefeuilles thématiques que j’investis avec mes propres fonds : crypto (directe ou via entreprises/produits exposés), technologies innovantes/disruptives et immobilier suisse via des fonds cotés défiscalisés.',
+          principles_title: 'Mon approche d’investissement',
+          p1_title: 'Horizon d’investissement long TERME',
+          p1_text:
+            'La bourse n’est pas un loto : elle évolue selon l’économie, la géopolitique, les innovations et les cycles. À l’ère de l’IA et du trading algorithmique, spéculer devient difficile ; il faut investir sur la durée, « surfer » les tendances et sortir aux bons moments.',
+          p2_title: 'Diversification stratégique',
+          p2_text:
+            'Accédez à des portefeuilles thématiques : crypto, nouvelles technologies et immobilier suisse (fonds cotés défiscalisés). Les combiner élargit la diversification sectorielle et géographique, réduit la volatilité et augmente les chances de performance. Les cryptos sont par exemple décorrélées de l’immobilier suisse. Vous pouvez aussi faire du « cherry picking » si vous démarrez petit.',
+          p3_title: 'Discipline « Buy & Hold »',
+          p3_text:
+            'Pas de day trading. On achète au bon timing et on garde plusieurs mois/années. Les ventes peuvent être déclenchées par : retournement de marché (choc géopolitique/éco), fin de cycle (p. ex. cycle de 4 ans du Bitcoin), prise de bénéfices ou une nouvelle qui dégrade le potentiel d’un titre.',
+          solution_title: 'OpenFolio, sans bruit ni jargon',
+          solution_lead:
+            'Abonnement simple pour suivre mes portefeuilles thématiques, adaptés à votre profil de risque, avec alertes en temps réel et explications claires.',
+          feat1_t: 'Transparence en direct',
+          feat1_d: 'voyez chaque mouvement et la raison derrière.',
+          feat2_t: 'Suivi pédagogique',
+          feat2_d: 'apprenez en observant des décisions réelles, sans jargon.',
+          feat3_t: 'Synthèses mensuelles',
+          feat3_d: 'bilan des performances et des tendances.',
+          feat4_t: 'Vous gardez le contrôle',
+          feat4_d:
+            'aucun lien bancaire requis ; vous décidez quand et comment investir.',
+          pm1_t: 'Portefeuille Croissance Équilibrée',
+          pm1_p: 'Exemple : +12,3% YTD',
+          pm1_s:
+            'Dernière note : renforcement sur grandes capitalisations tech',
+          pm2_t: 'Tech Innovation',
+          pm2_p: 'Exemple : +18,7% YTD',
+          pm2_s: 'Alerte : nouvelle position semi-conducteurs',
+          pm3_t: 'Immobilier Suisse (fonds cotés)',
+          pm3_p: 'Exemple : +7,2% YTD',
+          pm3_s: 'Flux de dividendes réguliers',
+          pricing_title: 'Investir simplement',
+          pricing_badge: 'Le plus choisi',
+          pricing_name: 'OpenFolio Premium',
+          price_unit: 'jour',
+          pricing_sub:
+            'Moins qu’un café. Conçu pour faire grandir votre capital.',
+          pf1: 'Accès aux portefeuilles thématiques de Philippe',
+          pf2: 'Alertes en temps réel',
+          pf3: 'Transparence complète sur chaque mouvement',
+          pf4: 'Rapports mensuels de performance',
+          pf5: 'Contenus pédagogiques',
+          pf6: 'Application mobile',
+          pf7: 'Résiliation à tout moment',
+          pricing_note: 'Sans engagement long terme. Annulation à tout moment.',
+          faq_title: 'Questions fréquentes',
+          q1: 'Dois-je lier mon compte bancaire ?',
+          a1: 'Non. OpenFolio n’exige aucun lien bancaire ni données financières personnelles. Vous suivez les portefeuilles et décidez vous-même d’investir.',
+          q2: 'Comment OpenFolio se rémunère ?',
+          a2: 'Par un abonnement simple de 1 CHF/jour donnant accès aux portefeuilles, aux alertes et aux contenus pédagogiques. Aucun pourcentage ni frais cachés.',
+          q3: 'Et si je débute totalement ?',
+          a3: 'C’est justement l’objectif : apprendre en suivant des décisions réelles, expliquées simplement. Pas besoin de diplôme en finance.',
+          q4: 'Puis-je choisir seulement quelques positions ?',
+          a4: 'Oui, vous pouvez faire du « cherry picking » – par exemple 1‑2 cryptos et 1 fonds immobilier pour démarrer avec une mise limitée.',
+          q5: 'Qu’est‑ce qui déclenche une vente ?',
+          a5: 'Un retournement de marché, la fin d’un cycle (p. ex. cycle de 4 ans du Bitcoin), une prise de bénéfices ou une nouvelle qui dégrade le potentiel d’un titre.',
+          q6: 'Puis‑je annuler à tout moment ?',
+          a6: 'Oui. L’abonnement est sans engagement long terme et résiliable à tout moment.',
+          final_title: 'Prêt à investir plus intelligemment ?',
+          final_sub:
+            'Rejoignez des investisseurs qui privilégient la transparence et la discipline sur le bruit.',
+          final_cta: 'Commencer – 1 CHF/jour',
+          final_note: 'Sans engagement. Annulation simple, à tout moment.',
+          rights: 'Tous droits réservés.',
+          disclaimer:
+            'Informations fournies par Philippe Beckers. Rien de ce qui est présenté ne constitue un conseil en investissement. Les performances passées ne préjugent pas des performances futures. Vous restez seul responsable de vos décisions d’investissement.',
+        },
+        de: {
+          _meta_title: 'OpenFolio – Einfach investieren | 1 CHF/Tag',
+          _meta_desc:
+            'Folgen Sie echten Portfolios von Philippe Beckers (ARIF). Langer Anlagehorizont, thematische Diversifikation und Buy-&-Hold – für 1 CHF/Tag.',
+          hero_title: 'Echten Portfolios transparent folgen',
+          hero_sub:
+            'Ich bin Philippe Beckers, technischer Hintergrund und über 30 Jahre Investmenterfahrung. ARIF‑Mitglied und im Schweizer Register der Kundenberater eingetragen. Mein Ansatz: langer Anlagehorizont, thematische Diversifikation, diszipliniertes Buy & Hold.',
+          price_period: 'pro Tag',
+          cta_start: 'Heute starten',
+          cta_learn: 'Mehr erfahren',
+          trust_transparency: '100% Transparenz',
+          trust_learn: 'Lernen durch Folgen',
+          trust_expert: 'Bewährter Ansatz',
+          about_title: 'Über Philippe',
+          about_text:
+            'Ingenieur mit technischem Hintergrund und über 30 Jahren Erfahrung an den Märkten. Mitglied der Association Romande des Intermédiaires Financiers (ARIF) und im Schweizer Register der Finanzberater für Kunden eingetragen.',
+          about_badge: 'ARIF & Beraterregister',
+          about_promise_title: 'Ihr Mehrwert',
+          about_promise_text:
+            'Themenportfolios, in die ich mein eigenes Kapital investiere: Krypto (direkt oder über Unternehmen/Produkte), innovative/disruptive Technologien sowie Schweizer Immobilien über kotierte, steuergünstige Fonds.',
+          principles_title: 'Mein Investmentansatz',
+          p1_title: 'Langer Anlagehorizont',
+          p1_text:
+            'Börse ist kein Lotto: Sie folgt Konjunktur, Geopolitik, Innovation und Zyklen. In Zeiten von KI und Algotrading ist Spekulation schwierig – daher langfristig investieren, Trends reiten und rechtzeitig aussteigen.',
+          p2_title: 'Strategische Diversifikation',
+          p2_text:
+            'Zugang zu Themenportfolios: Krypto, neue Technologien und Schweizer Immobilien (kotierte, steuerbegünstigte Fonds). Die Kombination verbreitert Sektoren/Regionen, reduziert Schwankungen und erhöht die Chance auf Rendite. Krypto ist z. B. wenig mit Schweizer Immobilien korreliert. Auch „Cherry Picking“ ist möglich.',
+          p3_title: 'Buy‑&‑Hold‑Disziplin',
+          p3_text:
+            'Kein Daytrading. Wir kaufen mit gutem Timing und halten Monate/Jahre. Verkäufe bei: Marktumschwung (geo/ökonomischer Schock), Zyklusende (z. B. 4‑Jahres‑Zyklus von Bitcoin), Gewinnmitnahme oder negativer Titel‑News.',
+          solution_title: 'OpenFolio – ohne Lärm und Jargon',
+          solution_lead:
+            'Einfaches Abo, um meinen Themenportfolios zu folgen – mit Echtzeit‑Alerts und klaren Erklärungen, passend zu Ihrem Risikoprofil.',
+          feat1_t: 'Live‑Transparenz',
+          feat1_d: 'jeden Schritt sehen und verstehen.',
+          feat2_t: 'Didaktisches Folgen',
+          feat2_d: 'aus echten Entscheidungen lernen – ohne Fachchinesisch.',
+          feat3_t: 'Monatliche Zusammenfassungen',
+          feat3_d: 'Leistung und Trends im Überblick.',
+          feat4_t: 'Sie behalten die Kontrolle',
+          feat4_d:
+            'kein Banklink nötig; Sie entscheiden, wann und wie Sie investieren.',
+          pm1_t: 'Ausgewogenes Wachstumsportfolio',
+          pm1_p: 'Beispiel: +12,3% YTD',
+          pm1_s: 'Letzte Notiz: Aufstockung bei großen Techs',
+          pm2_t: 'Tech Innovation',
+          pm2_p: 'Beispiel: +18,7% YTD',
+          pm2_s: 'Alert: neue Halbleiter‑Position',
+          pm3_t: 'Schweizer Immobilien (Fonds)',
+          pm3_p: 'Beispiel: +7,2% YTD',
+          pm3_s: 'Regelmäßige Dividendenflüsse',
+          pricing_title: 'Einfach investieren',
+          pricing_badge: 'Am beliebtesten',
+          pricing_name: 'OpenFolio Premium',
+          price_unit: 'Tag',
+          pricing_sub:
+            'Weniger als ein Kaffee. Gemacht, um Ihr Vermögen wachsen zu lassen.',
+          pf1: 'Zugang zu Philippes Themenportfolios',
+          pf2: 'Echtzeit‑Benachrichtigungen',
+          pf3: 'Volle Transparenz bei jedem Schritt',
+          pf4: 'Monatliche Performance‑Reports',
+          pf5: 'Lerninhalte',
+          pf6: 'Mobile App',
+          pf7: 'Jederzeit kündbar',
+          pricing_note: 'Keine langfristige Bindung. Jederzeit kündbar.',
+          faq_title: 'Häufige Fragen',
+          q1: 'Muss ich mein Bankkonto verknüpfen?',
+          a1: 'Nein. OpenFolio erfordert weder Bank‑Link noch persönliche Finanzdaten. Sie folgen den Portfolios und entscheiden selbst.',
+          q2: 'Wie verdient OpenFolio Geld?',
+          a2: 'Über ein einfaches Abo von 1 CHF/Tag für Portfolios, Alerts und Lerninhalte. Keine Prozente oder versteckte Gebühren.',
+          q3: 'Ich bin Anfänger – geht das?',
+          a3: 'Genau dafür: Lernen, indem Sie reale Entscheidungen mit klaren Erklärungen verfolgen. Kein Finanzstudium nötig.',
+          q4: 'Kann ich nur wenige Positionen wählen?',
+          a4: 'Ja, „Cherry Picking“ ist möglich – z. B. 1–2 Kryptos und 1 Immobilienfonds für den Start.',
+          q5: 'Wann wird verkauft?',
+          a5: 'Bei Marktumschwung, Zyklusende (z. B. 4‑Jahres‑Bitcoin‑Zyklus), Gewinnmitnahme oder negativen Titelnachrichten.',
+          q6: 'Jederzeit kündbar?',
+          a6: 'Ja, jederzeit ohne langfristige Bindung.',
+          final_title: 'Bereit, smarter zu investieren?',
+          final_sub:
+            'Schließen Sie sich Anlegern an, die Transparenz und Disziplin dem Lärm vorziehen.',
+          final_cta: 'Jetzt starten – 1 CHF/Tag',
+          final_note: 'Ohne Bindung. Kündigung jederzeit.',
+          rights: 'Alle Rechte vorbehalten.',
+          disclaimer:
+            'Informationen bereitgestellt von Philippe Beckers. Keine Anlageberatung. Vergangene Performance ist kein zuverlässiger Indikator für zukünftige Ergebnisse. Sie sind allein verantwortlich für Ihre Entscheidungen.',
+        },
+        en: {
+          _meta_title: 'OpenFolio – Smart investing | 1 CHF/day',
+          _meta_desc:
+            'Follow real portfolios managed by Philippe Beckers (ARIF). Long‑term horizon, thematic diversification, and buy‑and‑hold discipline — for 1 CHF/day.',
+          hero_title: 'Follow Real Portfolios—100% Transparent',
+          hero_sub:
+            'I’m Philippe Beckers, tech background with 30+ years investing. ARIF member and registered in Switzerland’s client‑advisor register. My method: long‑term horizon, thematic diversification, and disciplined buy & hold.',
+          price_period: 'per day',
+          cta_start: 'Start today',
+          cta_learn: 'Learn more',
+          trust_transparency: '100% transparency',
+          trust_learn: 'Learn by following',
+          trust_expert: 'Proven approach',
+          about_title: 'About Philippe',
+          about_text:
+            'Engineer by training with a technology background and 30+ years of market experience. Member of ARIF and registered in the Swiss register of financial client advisors.',
+          about_badge: 'ARIF & Advisor Register',
+          about_promise_title: 'What you get',
+          about_promise_text:
+            'Thematic portfolios I invest my own capital in: crypto (direct or via companies/products), innovative/disruptive technologies, and Swiss real estate via tax‑advantaged listed funds.',
+          principles_title: 'My investment approach',
+          p1_title: 'Long‑term investment horizon',
+          p1_text:
+            'Markets aren’t a lottery. They move with macro conditions, geopolitics, innovation and cycles. In the age of AI and algorithmic trading, speculation is tough—so we invest over time, ride trends and exit at the right moments.',
+          p2_title: 'Strategic diversification',
+          p2_text:
+            'Access thematic portfolios: crypto, new technologies and Swiss real estate (listed, tax‑efficient funds). Combining them broadens sector/geo exposure, reduces volatility and increases performance odds. Crypto is, for example, uncorrelated with Swiss real estate. You can also cherry‑pick if you start small.',
+          p3_title: 'Buy‑and‑hold discipline',
+          p3_text:
+            'No day trading. We buy with proper timing and hold for months/years. Sells can be triggered by: market reversals (geo/economic shocks), end of cycle (e.g., Bitcoin’s 4‑year cycle), profit‑taking or news that impairs a position.',
+          solution_title: 'OpenFolio—no noise, no jargon',
+          solution_lead:
+            'A simple subscription to follow my thematic portfolios with real‑time alerts and clear explanations, aligned to your risk profile.',
+          feat1_t: 'Live transparency',
+          feat1_d: 'see each move and the rationale behind it.',
+          feat2_t: 'Learn by following',
+          feat2_d: 'observe real decisions without jargon.',
+          feat3_t: 'Monthly summaries',
+          feat3_d: 'concise performance and trend reviews.',
+          feat4_t: 'You stay in control',
+          feat4_d:
+            'no bank linking required; you decide when and how to invest.',
+          pm1_t: 'Balanced Growth Portfolio',
+          pm1_p: 'Example: +12.3% YTD',
+          pm1_s: 'Last note: add on mega‑cap tech',
+          pm2_t: 'Tech Innovation',
+          pm2_p: 'Example: +18.7% YTD',
+          pm2_s: 'Alert: new semiconductor position',
+          pm3_t: 'Swiss Real Estate (listed funds)',
+          pm3_p: 'Example: +7.2% YTD',
+          pm3_s: 'Steady dividend flows',
+          pricing_title: 'Investing made simple',
+          pricing_badge: 'Most popular',
+          pricing_name: 'OpenFolio Premium',
+          price_unit: 'day',
+          pricing_sub: 'Less than a coffee. Built to grow your capital.',
+          pf1: 'Access to Philippe’s thematic portfolios',
+          pf2: 'Real‑time alerts',
+          pf3: 'Full transparency on every move',
+          pf4: 'Monthly performance reports',
+          pf5: 'Educational content',
+          pf6: 'Mobile app access',
+          pf7: 'Cancel anytime',
+          pricing_note: 'No long‑term commitments. Cancel anytime.',
+          faq_title: 'Frequently asked questions',
+          q1: 'Do I need to link my bank account?',
+          a1: 'No. OpenFolio requires no bank linking or personal financial data. You follow the portfolios and decide for yourself.',
+          q2: 'How do you make money?',
+          a2: 'Via a simple subscription of 1 CHF/day for portfolio access, alerts and educational content. No percentages or hidden fees.',
+          q3: 'What if I’m a complete beginner?',
+          a3: 'Perfect. Learn by following real decisions with clear explanations. No finance degree needed.',
+          q4: 'Can I cherry‑pick a few positions?',
+          a4: 'Yes—e.g., 1–2 cryptos and 1 real‑estate fund if you want to start with a smaller budget.',
+          q5: 'What triggers a sell?',
+          a5: 'Market reversals, end of cycle (e.g., Bitcoin’s 4‑year cycle), profit taking, or news that impairs a position.',
+          q6: 'Can I cancel anytime?',
+          a6: 'Absolutely. Cancel anytime with no questions asked.',
+          final_title: 'Ready to invest smarter?',
+          final_sub:
+            'Join investors who prefer transparency and discipline over noise.',
+          final_cta: 'Start now – 1 CHF/day',
+          final_note: 'No commitment. Cancel anytime.',
+          rights: 'All rights reserved.',
+          disclaimer:
+            'Information provided by Philippe Beckers. Nothing here is investment advice. Past performance is not indicative of future results. You are solely responsible for your investment decisions.',
+        },
+      };
+
+      // Set or detect language
+      const html = document.documentElement;
+      const metaTitle = document.querySelector('title');
+      const metaDesc = document.querySelector('meta[name="description"]');
+      const select = document.getElementById('langSwitcher');
+
+      function applyLang(lang) {
+        const dict = i18n[lang] || i18n.fr;
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+          const key = el.getAttribute('data-i18n');
+          if (dict[key]) el.innerHTML = dict[key];
+        });
+        html.setAttribute('lang', lang);
+        metaTitle.textContent = dict._meta_title;
+        if (metaDesc) metaDesc.setAttribute('content', dict._meta_desc);
+        // Update price unit in badge if needed (already handled via data-i18n)
+        // Persist
+        try {
+          localStorage.setItem('of_lang', lang);
+        } catch {}
+      }
+
+      const stored = (() => {
+        try {
+          return localStorage.getItem('of_lang');
+        } catch {
+          return null;
+        }
+      })();
+      let initial = stored || (navigator.language || 'fr').slice(0, 2);
+      if (!['fr', 'de', 'en'].includes(initial)) initial = 'fr';
+      select.value = initial;
+      applyLang(initial);
+
+      select.addEventListener('change', (e) => applyLang(e.target.value));
+
+      // Basic CTA tracking hook (replace with real analytics)
+      document
+        .querySelectorAll('.btn')
+        .forEach((btn) =>
+          btn.addEventListener('click', () =>
+            console.log('CTA:', btn.textContent.trim())
+          )
+        );
+    </script>
+  </body>
+</html>

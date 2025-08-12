@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <title>Sparrtner Portfolio - Paiement</title>
+    <!-- Load Stripe.js for payment processing -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+      :root {
+        /* Balder App Brand Colors - Enhanced */
+        --color-primary: #ffb500;
+        --color-primary-hover: #e5a200;
+        --color-primary-active: #cc9100;
+        --color-primary-light: #ffc932;
+        --color-primary-soft: #fff4d6;
+        --color-dark: #1a1a1a;
+        --color-text: #1f2937;
+        --color-text-secondary: #4b5563;
+        --color-text-muted: #6b7280;
+        --color-border: #e5e7eb;
+        --color-border-light: #f3f4f6;
+        --color-surface: #ffffff;
+        --color-background: #fafbfc;
+        --color-background-alt: #f8f9fa;
+
+        /* Premium shadow system */
+        --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05),
+          0 2px 4px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1),
+          0 4px 6px rgba(0, 0, 0, 0.05);
+        --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1),
+          0 8px 10px rgba(0, 0, 0, 0.04);
+        --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+        --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+
+        /* Modern border radius scale */
+        --radius-xs: 4px;
+        --radius-sm: 6px;
+        --radius: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --radius-2xl: 24px;
+        --radius-full: 9999px;
+
+        /* Typography system */
+        --font-weight-light: 300;
+        --font-weight-regular: 400;
+        --font-weight-medium: 500;
+        --font-weight-semibold: 600;
+        --font-weight-bold: 700;
+        --font-weight-extrabold: 800;
+        --font-weight-black: 900;
+
+        /* Fluid spacing scale */
+        --space-px: 1px;
+        --space-0-5: 0.125rem;
+        --space-1: 0.25rem;
+        --space-1-5: 0.375rem;
+        --space-2: 0.5rem;
+        --space-2-5: 0.625rem;
+        --space-3: 0.75rem;
+        --space-3-5: 0.875rem;
+        --space-4: 1rem;
+        --space-5: 1.25rem;
+        --space-6: 1.5rem;
+        --space-7: 1.75rem;
+        --space-8: 2rem;
+        --space-9: 2.25rem;
+        --space-10: 2.5rem;
+        --space-11: 2.75rem;
+        --space-12: 3rem;
+        --space-14: 3.5rem;
+        --space-16: 4rem;
+        --space-20: 5rem;
+        --space-24: 6rem;
+        --space-28: 7rem;
+        --space-32: 8rem;
+
+        /* Animation system */
+        --duration-75: 75ms;
+        --duration-100: 100ms;
+        --duration-150: 150ms;
+        --duration-200: 200ms;
+        --duration-300: 300ms;
+        --duration-500: 500ms;
+        --duration-700: 700ms;
+        --duration-1000: 1000ms;
+
+        --ease-linear: linear;
+        --ease-in: cubic-bezier(0.4, 0, 1, 1);
+        --ease-out: cubic-bezier(0, 0, 0.2, 1);
+        --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+        /* Premium gradients */
+        --gradient-primary: linear-gradient(
+          135deg,
+          var(--color-primary) 0%,
+          var(--color-primary-light) 100%
+        );
+        --gradient-surface: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        --gradient-border: linear-gradient(
+          135deg,
+          rgba(255, 181, 0, 0.1) 0%,
+          rgba(255, 181, 0, 0.05) 100%
+        );
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-weight: var(--font-weight-regular);
+        background: var(--color-background);
+        min-height: 100vh;
+        padding: var(--space-6);
+        color: var(--color-text);
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+        scroll-behavior: smooth;
+      }
+
+      .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 var(--space-4);
+        position: relative;
+      }
+
+      @media (min-width: 640px) {
+        .container {
+          padding: 0 var(--space-6);
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .container {
+          padding: 0 var(--space-8);
+        }
+      }
+
+      .steps-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: var(--space-12);
+        padding: var(--space-8) 0;
+        position: relative;
+      }
+
+      .steps-indicator::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--gradient-surface);
+        border-radius: var(--radius-2xl);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--color-border-light);
+      }
+
+      .step {
+        display: flex;
+        align-items: center;
+        color: var(--color-text-muted);
+        font-weight: var(--font-weight-medium);
+        font-size: 0.95rem;
+        transition: all var(--duration-300) var(--ease-out);
+        position: relative;
+        z-index: 1;
+      }
+
+      .step.active {
+        color: var(--color-dark);
+        font-weight: var(--font-weight-semibold);
+      }
+
+      .step.completed {
+        color: var(--color-primary);
+        font-weight: var(--font-weight-semibold);
+      }
+
+      .step-number {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 2px solid currentColor;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: var(--space-4);
+        font-weight: var(--font-weight-bold);
+        font-size: 0.9rem;
+        transition: all var(--duration-300) var(--ease-out);
+        background: var(--color-surface);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .step-number::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--duration-300) var(--ease-out);
+      }
+
+      .step.active .step-number,
+      .step.completed .step-number {
+        background: var(--gradient-primary);
+        border-color: var(--color-primary);
+        color: var(--color-dark);
+        box-shadow: var(--shadow-lg), 0 0 0 4px rgba(255, 181, 0, 0.1);
+        transform: scale(1.1);
+      }
+
+      .step.active .step-number::before,
+      .step.completed .step-number::before {
+        opacity: 1;
+      }
+
+      .step-connector {
+        width: 80px;
+        height: 4px;
+        background: var(--color-border);
+        margin: 0 var(--space-6);
+        border-radius: var(--radius-full);
+        transition: all var(--duration-300) var(--ease-out);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .step-connector::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--gradient-primary);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform var(--duration-500) var(--ease-out);
+      }
+
+      .step.completed + .step-connector::before {
+        transform: scaleX(1);
+      }
+
+      .payment-container {
+        background: var(--gradient-surface);
+        border-radius: var(--radius-2xl);
+        box-shadow: var(--shadow-2xl);
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        position: relative;
+      }
+
+      .payment-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--gradient-border);
+      }
+
+      .step-content {
+        display: none;
+        padding: var(--space-16) var(--space-12);
+        background: var(--color-surface);
+        position: relative;
+        min-height: 600px;
+      }
+
+      .step-content.active {
+        display: block;
+        animation: fadeInUp var(--duration-500) var(--ease-out);
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Step 1 - Portfolio Selection */
+      .portfolio-selection {
+        text-align: center;
+      }
+
+      .step-title {
+        font-size: clamp(2rem, 4vw, 2.75rem);
+        font-weight: var(--font-weight-extrabold);
+        color: var(--color-dark);
+        margin-bottom: var(--space-6);
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        text-align: center;
+      }
+
+      .step-subtitle {
+        font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+        font-weight: var(--font-weight-regular);
+        color: var(--color-text-muted);
+        margin-bottom: var(--space-12);
+        line-height: 1.6;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+      }
+
+      .portfolio-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: var(--space-8);
+        margin-bottom: var(--space-16);
+        padding: 0;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .portfolio-card {
+        border: 2px solid var(--color-border);
+        border-radius: var(--radius-xl);
+        padding: var(--space-8);
+        cursor: pointer;
+        transition: all var(--duration-300) var(--ease-out);
+        position: relative;
+        background: var(--gradient-surface);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        min-height: 240px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .portfolio-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--color-border);
+        transition: all 0.3s ease;
+      }
+
+      .portfolio-card:hover {
+        border-color: var(--color-primary);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .portfolio-card:hover::before {
+        background: var(--color-primary);
+      }
+
+      .portfolio-card.selected {
+        border-color: var(--color-primary);
+        background: var(--color-surface);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+      }
+
+      .portfolio-card.selected::before {
+        background: var(--color-primary);
+      }
+
+      .portfolio-card.selected::after {
+        content: '✓';
+        position: absolute;
+        top: var(--spacing-lg);
+        right: var(--spacing-lg);
+        background: var(--color-primary);
+        color: var(--color-dark);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: var(--font-weight-bold);
+        box-shadow: var(--shadow-md);
+        z-index: 10;
+      }
+
+      .portfolio-input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .portfolio-name {
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--color-dark);
+        margin-bottom: var(--spacing-sm);
+        letter-spacing: -0.01em;
+      }
+
+      .portfolio-desc {
+        color: var(--color-text-muted);
+        margin-bottom: var(--space-6);
+        font-weight: var(--font-weight-medium);
+        line-height: 1.5;
+      }
+
+      .portfolio-features {
+        text-align: left;
+        font-size: 0.95rem;
+        color: var(--color-text);
+        line-height: 1.6;
+        margin-top: auto;
+      }
+
+      .portfolio-features li {
+        margin-bottom: var(--space-2);
+        padding-left: var(--space-3);
+      }
+
+      .billing-selector {
+        background: var(--gradient-surface);
+        border-radius: var(--radius-xl);
+        padding: var(--space-10);
+        margin: var(--space-16) auto;
+        border: 1px solid var(--color-border);
+        box-shadow: var(--shadow-md);
+        max-width: 600px;
+      }
+
+      .billing-title {
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--color-dark);
+        margin-bottom: var(--space-8);
+        text-align: center;
+        letter-spacing: -0.01em;
+      }
+
+      .billing-toggle {
+        background: var(--color-surface);
+        border-radius: var(--radius-full);
+        padding: var(--space-1);
+        display: flex;
+        box-shadow: var(--shadow-lg);
+        border: 2px solid var(--color-border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .billing-option {
+        flex: 1;
+        padding: var(--space-4) var(--space-6);
+        text-align: center;
+        cursor: pointer;
+        border-radius: var(--radius-full);
+        font-weight: var(--font-weight-semibold);
+        font-size: 1rem;
+        transition: all var(--duration-300) var(--ease-out);
+        position: relative;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .billing-option.selected {
+        background: var(--color-primary);
+        color: var(--color-dark);
+        box-shadow: var(--shadow-md);
+        transform: scale(1.02);
+        font-weight: var(--font-weight-bold);
+      }
+
+      .savings-badge {
+        background: var(--color-dark);
+        color: var(--color-surface);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-bold);
+        margin-left: var(--spacing-sm);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .price-summary {
+        background: var(--gradient-primary);
+        color: var(--color-dark);
+        border-radius: var(--radius-xl);
+        padding: var(--space-10);
+        text-align: center;
+        box-shadow: var(--shadow-xl);
+        border: 2px solid rgba(255, 181, 0, 0.2);
+        margin: var(--space-16) auto var(--space-12);
+        max-width: 600px;
+      }
+
+      .selected-portfolios {
+        margin-bottom: var(--space-6);
+      }
+
+      .selected-portfolios h4 {
+        font-size: 1.2rem;
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--space-3);
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .portfolio-list {
+        font-size: 1rem;
+        font-weight: var(--font-weight-medium);
+        opacity: 0.85;
+        line-height: 1.4;
+      }
+
+      .price-breakdown {
+        margin-bottom: var(--space-6);
+      }
+
+      .original-price {
+        font-size: 1.1rem;
+        font-weight: var(--font-weight-medium);
+        opacity: 0.7;
+        text-decoration: line-through;
+        margin-bottom: var(--space-2);
+      }
+
+      .current-price {
+        font-size: 2.75rem;
+        font-weight: var(--font-weight-extrabold);
+        margin-bottom: var(--space-3);
+        letter-spacing: -0.02em;
+      }
+
+      .billing-period {
+        font-size: 1rem;
+        font-weight: var(--font-weight-medium);
+        opacity: 0.85;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .savings-info {
+        background: rgba(26, 26, 26, 0.1);
+        border: 1px solid rgba(26, 26, 26, 0.15);
+        border-radius: var(--radius-sm);
+        padding: var(--space-4);
+        margin-top: var(--space-6);
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-semibold);
+        text-align: center;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: var(--space-6);
+        justify-content: center;
+        margin-top: var(--space-16);
+        flex-wrap: wrap;
+        padding: 0 var(--space-4);
+      }
+
+      .btn {
+        position: relative;
+        padding: var(--space-4) var(--space-8);
+        border-radius: var(--radius-lg);
+        font-weight: var(--font-weight-bold);
+        cursor: pointer;
+        transition: all var(--duration-300) var(--ease-out);
+        border: 2px solid transparent;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-family: 'Heebo', sans-serif;
+        min-width: 200px;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+      }
+
+      .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        transition: left var(--duration-700) var(--ease-out);
+      }
+
+      .btn:hover::before {
+        left: 100%;
+      }
+
+      .btn::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--duration-200) var(--ease-out);
+        z-index: -1;
+      }
+
+      .btn-primary {
+        background: var(--gradient-primary);
+        color: var(--color-dark);
+        box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 181, 0, 0.1);
+        border-color: transparent;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-2xl), 0 0 0 1px rgba(255, 181, 0, 0.2);
+        filter: brightness(1.05);
+      }
+
+      .btn-primary:active {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: var(--shadow-sm);
+        filter: none;
+      }
+
+      .btn-primary:disabled:hover {
+        transform: none;
+        box-shadow: var(--shadow-sm);
+        filter: none;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.8);
+        color: var(--color-dark);
+        border: 2px solid var(--color-border);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .btn-secondary:hover {
+        background: var(--color-dark);
+        color: var(--color-surface);
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--color-dark);
+      }
+
+      .btn-secondary:active {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+      }
+
+      /* Step 2 - Payment Form */
+      .payment-step {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-16);
+        align-items: start;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .form-section {
+        /* Styles for form section */
+      }
+
+      .form-title {
+        font-size: 2.25rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--color-dark);
+        margin-bottom: var(--space-4);
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+
+      .form-subtitle {
+        color: var(--color-text-muted);
+        font-weight: var(--font-weight-medium);
+        margin-bottom: var(--space-12);
+        font-size: 1.1rem;
+        line-height: 1.5;
+      }
+
+      .form-group {
+        margin-bottom: var(--space-8);
+      }
+
+      .form-label {
+        display: block;
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-dark);
+        margin-bottom: var(--space-3);
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: var(--space-4) var(--space-5);
+        border: 2px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        font-size: 1rem;
+        font-weight: var(--font-weight-medium);
+        transition: all var(--duration-300) var(--ease-out);
+        background: var(--color-surface);
+        color: var(--color-text);
+        font-family: 'Heebo', sans-serif;
+        min-height: 52px;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        background: var(--color-surface);
+        box-shadow: 0 0 0 4px rgba(255, 181, 0, 0.15);
+        transform: translateY(-2px);
+      }
+
+      .form-input:hover {
+        border-color: var(--color-primary);
+      }
+
+      #card-element {
+        padding: var(--space-4) var(--space-5);
+        border: 2px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background: var(--color-surface);
+        transition: all var(--duration-300) var(--ease-out);
+        box-shadow: var(--shadow-sm);
+        min-height: 52px;
+      }
+
+      #card-element:focus-within {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 4px rgba(255, 181, 0, 0.15);
+        transform: translateY(-2px);
+      }
+
+      #card-element:hover {
+        border-color: var(--color-primary);
+      }
+
+      .error-message {
+        color: #d32f2f;
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-medium);
+        margin-top: var(--space-3);
+        padding: var(--space-4) var(--space-6);
+        background: #ffebee;
+        border-radius: var(--radius-lg);
+        border-left: 4px solid #d32f2f;
+        border: 1px solid #ffcdd2;
+      }
+
+      .success-message {
+        color: #2e7d32;
+        font-size: 0.95rem;
+        font-weight: var(--font-weight-medium);
+        margin-top: var(--space-3);
+        padding: var(--space-4) var(--space-6);
+        background: #e8f5e8;
+        border-radius: var(--radius-lg);
+        border-left: 4px solid #4caf50;
+        border: 1px solid #c8e6c9;
+        line-height: 1.5;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 22px;
+        height: 22px;
+        border: 3px solid rgba(26, 26, 26, 0.2);
+        border-radius: 50%;
+        border-top-color: var(--color-dark);
+        animation: spin 1s ease-in-out infinite;
+        margin-right: var(--space-3);
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .security-note {
+        background: var(--color-background-alt);
+        padding: var(--space-6);
+        border-radius: var(--radius-lg);
+        margin-top: var(--space-8);
+        font-size: 0.9rem;
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text);
+        border-left: 4px solid var(--color-primary);
+        border: 1px solid var(--color-border);
+        line-height: 1.6;
+      }
+
+      /* Enhanced Responsive Design for Payment Page */
+
+      /* Large screens */
+      @media (min-width: 1440px) {
+        .container {
+          max-width: 1440px;
+          padding: 0 var(--space-16);
+        }
+
+        .step-content {
+          padding: var(--space-16) var(--space-20);
+        }
+
+        .portfolio-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: var(--space-10);
+        }
+      }
+
+      /* Desktop */
+      @media (max-width: 1024px) {
+        .payment-step {
+          grid-template-columns: 1fr;
+          gap: var(--space-12);
+        }
+
+        .step-content {
+          padding: var(--space-10) var(--space-12);
+        }
+      }
+
+      /* Tablets */
+      @media (max-width: 768px) {
+        body {
+          padding: var(--space-4);
+        }
+
+        .container {
+          padding: 0 var(--space-3);
+        }
+
+        .step-content {
+          padding: var(--space-12) var(--space-6);
+          min-height: auto;
+        }
+
+        .payment-step {
+          grid-template-columns: 1fr;
+          gap: var(--space-12);
+        }
+
+        .portfolio-grid {
+          grid-template-columns: 1fr;
+          gap: var(--space-6);
+          padding: 0;
+          margin-bottom: var(--space-12);
+        }
+
+        .step-title {
+          font-size: clamp(1.75rem, 5vw, 2.25rem);
+          margin-bottom: var(--space-6);
+        }
+
+        .step-subtitle {
+          font-size: 1.1rem;
+          margin-bottom: var(--space-10);
+        }
+
+        .form-title {
+          font-size: clamp(1.5rem, 4vw, 1.9rem);
+          margin-bottom: var(--space-4);
+        }
+
+        .form-subtitle {
+          font-size: 1rem;
+          margin-bottom: var(--space-8);
+        }
+
+        .steps-indicator {
+          margin-bottom: var(--space-10);
+          padding: var(--space-6) var(--space-4);
+        }
+
+        .step-number {
+          width: 44px;
+          height: 44px;
+          margin-right: var(--space-3);
+        }
+
+        .step-connector {
+          width: 60px;
+          margin: 0 var(--space-4);
+        }
+
+        .action-buttons {
+          flex-direction: column;
+          gap: var(--space-4);
+          margin-top: var(--space-12);
+          padding: 0 var(--space-2);
+        }
+
+        .btn {
+          min-width: auto;
+          width: 100%;
+          padding: var(--space-5) var(--space-6);
+          font-size: 1.1rem;
+        }
+
+        .billing-selector {
+          margin: var(--space-12) auto;
+          padding: var(--space-8);
+        }
+
+        .billing-toggle {
+          flex-direction: row;
+          gap: var(--space-1);
+          padding: var(--space-1);
+        }
+
+        .billing-option {
+          border-radius: var(--radius-full);
+          padding: var(--space-4) var(--space-5);
+          font-size: 0.9rem;
+        }
+
+        .portfolio-card {
+          padding: var(--space-6);
+          min-height: 200px;
+        }
+
+        .price-summary {
+          padding: var(--space-8);
+          margin: var(--space-12) auto;
+          max-width: 100%;
+        }
+
+        .form-group {
+          margin-bottom: var(--space-6);
+        }
+
+        .form-input {
+          padding: var(--space-4);
+          font-size: 1rem;
+        }
+
+        #card-element {
+          padding: var(--space-4);
+          min-height: 48px;
+        }
+      }
+
+      /* Mobile phones */
+      @media (max-width: 480px) {
+        body {
+          padding: var(--space-3);
+        }
+
+        .step-content {
+          padding: var(--space-10) var(--space-4);
+          min-height: auto;
+        }
+
+        .step-title {
+          font-size: 1.75rem;
+          line-height: 1.3;
+          margin-bottom: var(--space-5);
+        }
+
+        .step-subtitle {
+          font-size: 1rem;
+          margin-bottom: var(--space-8);
+        }
+
+        .form-title {
+          font-size: 1.5rem;
+          line-height: 1.3;
+          margin-bottom: var(--space-4);
+        }
+
+        .steps-indicator {
+          margin-bottom: var(--space-8);
+          padding: var(--space-5) var(--space-3);
+        }
+
+        .step-number {
+          width: 40px;
+          height: 40px;
+          font-size: 0.85rem;
+          margin-right: var(--space-2);
+        }
+
+        .step-connector {
+          width: 50px;
+          margin: 0 var(--space-3);
+        }
+
+        .portfolio-grid {
+          gap: var(--space-5);
+          margin-bottom: var(--space-10);
+        }
+
+        .portfolio-card {
+          padding: var(--space-5);
+          min-height: 180px;
+        }
+
+        .portfolio-card::after {
+          width: 28px;
+          height: 28px;
+          font-size: 16px;
+          top: var(--space-4);
+          right: var(--space-4);
+        }
+
+        .portfolio-name {
+          font-size: 1.25rem;
+          margin-bottom: var(--space-2);
+        }
+
+        .portfolio-desc {
+          font-size: 0.9rem;
+          margin-bottom: var(--space-4);
+        }
+
+        .billing-selector {
+          padding: var(--space-6);
+          margin: var(--space-10) auto;
+        }
+
+        .billing-title {
+          font-size: 1.2rem;
+          margin-bottom: var(--space-6);
+        }
+
+        .billing-toggle {
+          padding: var(--space-1);
+        }
+
+        .billing-option {
+          padding: var(--space-3) var(--space-4);
+          font-size: 0.85rem;
+          min-height: 44px;
+        }
+
+        .price-summary {
+          padding: var(--space-6);
+          margin: var(--space-10) auto;
+          max-width: 100%;
+        }
+
+        .current-price {
+          font-size: 2rem;
+        }
+
+        .selected-portfolios h4 {
+          font-size: 1rem;
+          margin-bottom: var(--space-3);
+        }
+
+        .portfolio-list {
+          font-size: 0.9rem;
+        }
+
+        .action-buttons {
+          margin-top: var(--space-10);
+          gap: var(--space-3);
+          padding: 0;
+        }
+
+        .btn {
+          padding: var(--space-4) var(--space-5);
+          font-size: 1rem;
+        }
+      }
+
+      /* Extra small devices */
+      @media (max-width: 360px) {
+        .step-title {
+          font-size: 1.5rem;
+        }
+
+        .form-title {
+          font-size: 1.3rem;
+        }
+
+        .current-price {
+          font-size: 1.75rem;
+        }
+
+        .step-number {
+          width: 36px;
+          height: 36px;
+          font-size: 0.8rem;
+        }
+
+        .step-connector {
+          width: 40px;
+          margin: 0 var(--space-2);
+        }
+
+        .btn {
+          padding: var(--space-3) var(--space-5);
+          font-size: 0.9rem;
+        }
+      }
+
+      /* Touch optimizations */
+      @media (hover: none) and (pointer: coarse) {
+        .btn {
+          min-height: 48px;
+          padding: var(--space-4) var(--space-6);
+        }
+
+        .portfolio-card {
+          min-height: 120px;
+          cursor: pointer;
+        }
+
+        .form-input,
+        #card-element {
+          min-height: 48px;
+          font-size: 16px; /* Prevents zoom on iOS */
+        }
+
+        .billing-option {
+          min-height: 48px;
+          padding: var(--space-4) var(--space-6);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Steps Indicator -->
+      <div class="steps-indicator">
+        <div class="step active" id="step-1-indicator">
+          <div class="step-number">1</div>
+          <span>Sélection</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step" id="step-2-indicator">
+          <div class="step-number">2</div>
+          <span>Paiement</span>
+        </div>
+      </div>
+
+      <div class="payment-container">
+        <!-- Step 1: Portfolio Selection -->
+        <div class="step-content active" id="step-1">
+          <div class="portfolio-selection">
+            <h1 class="step-title">Choisissez vos portfolios</h1>
+            <p class="step-subtitle">
+              Sélectionnez les portfolios qui correspondent à vos objectifs
+              d'investissement
+            </p>
+
+            <div class="portfolio-grid">
+              <div class="portfolio-card" data-portfolio="immo">
+                <input type="checkbox" class="portfolio-input" id="immo" />
+                <div class="portfolio-name">ImmoFolio</div>
+                <div class="portfolio-desc">
+                  Investissement immobilier diversifié
+                </div>
+                <ul class="portfolio-features">
+                  <li>• REITs internationaux</li>
+                  <li>• Crowdfunding immobilier</li>
+                  <li>• Fonds immobiliers</li>
+                </ul>
+              </div>
+
+              <div class="portfolio-card" data-portfolio="crypto">
+                <input type="checkbox" class="portfolio-input" id="crypto" />
+                <div class="portfolio-name">CryptoFolio</div>
+                <div class="portfolio-desc">
+                  Exposition directe aux cryptomonnaies
+                </div>
+                <ul class="portfolio-features">
+                  <li>• Bitcoin et Ethereum</li>
+                  <li>• Altcoins sélectionnés</li>
+                  <li>• Stratégie DCA</li>
+                </ul>
+              </div>
+
+              <div class="portfolio-card" data-portfolio="indirect">
+                <input type="checkbox" class="portfolio-input" id="indirect" />
+                <div class="portfolio-name">IndirectCryptoFolio</div>
+                <div class="portfolio-desc">
+                  Exposition indirecte aux crypto
+                </div>
+                <ul class="portfolio-features">
+                  <li>• Actions d'entreprises crypto</li>
+                  <li>• ETFs blockchain</li>
+                  <li>• Miners et exchanges</li>
+                </ul>
+              </div>
+
+              <div class="portfolio-card" data-portfolio="techno">
+                <input type="checkbox" class="portfolio-input" id="techno" />
+                <div class="portfolio-name">TechnoFolio</div>
+                <div class="portfolio-desc">Technologies d'avenir</div>
+                <ul class="portfolio-features">
+                  <li>• Intelligence artificielle</li>
+                  <li>• Robotique et automation</li>
+                  <li>• Énergies renouvelables</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="billing-selector">
+              <div class="billing-title">Période de facturation</div>
+              <div class="billing-toggle">
+                <div class="billing-option selected" data-billing="biannual">
+                  6 mois
+                </div>
+                <div class="billing-option" data-billing="annual">
+                  1 an <span class="savings-badge">-10%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="price-summary" id="price-summary">
+              <div class="selected-portfolios">
+                <h4>Portfolios sélectionnés</h4>
+                <div class="portfolio-list" id="selected-list">
+                  Aucun portfolio sélectionné
+                </div>
+              </div>
+              <div class="price-breakdown">
+                <div
+                  class="original-price"
+                  id="original-price"
+                  style="display: none"
+                ></div>
+                <div class="current-price" id="current-price">0.00 CHF</div>
+                <div class="billing-period" id="billing-period">
+                  Sélectionnez au moins un portfolio
+                </div>
+              </div>
+              <div
+                class="savings-info"
+                id="savings-info"
+                style="display: none"
+              ></div>
+            </div>
+
+            <div class="action-buttons">
+              <button class="btn btn-primary" id="continue-btn" disabled>
+                Continuer vers le paiement
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Payment Form -->
+        <div class="step-content" id="step-2">
+          <div class="payment-step">
+            <div class="form-section">
+              <h2 class="form-title">Finaliser le paiement</h2>
+              <p class="form-subtitle">Paiement sécurisé par Stripe</p>
+
+              <form id="payment-form">
+                <div class="form-group">
+                  <label class="form-label" for="email">Adresse e-mail</label>
+                  <input
+                    type="email"
+                    id="email"
+                    class="form-input"
+                    placeholder="votre@email.com"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="name">Nom complet</label>
+                  <input
+                    type="text"
+                    id="name"
+                    class="form-input"
+                    placeholder="Jean Dupont"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Informations de carte</label>
+                  <div id="card-element"></div>
+                  <div id="card-errors" role="alert"></div>
+                </div>
+
+                <div class="action-buttons">
+                  <button type="button" class="btn btn-secondary" id="back-btn">
+                    Retour
+                  </button>
+                  <button
+                    type="submit"
+                    id="submit-button"
+                    class="btn btn-primary"
+                  >
+                    <span id="button-text">Payer maintenant</span>
+                  </button>
+                </div>
+
+                <div id="payment-result"></div>
+              </form>
+
+              <div class="security-note">
+                🔒 <strong>PAIEMENT SÉCURISÉ</strong> - Interface de sélection
+                multiple pour portfolios spécialisés. Vos informations de
+                paiement sont cryptées et sécurisées par Stripe. <br /><br />
+                📋 <strong>Mode test activé :</strong> 4242424242424242 (Visa),
+                5555555555554444 (Mastercard). Aucun vrai paiement ne sera
+                effectué.
+              </div>
+            </div>
+
+            <div class="price-summary">
+              <div class="selected-portfolios">
+                <h4>Résumé de votre commande</h4>
+                <div class="portfolio-list" id="final-selected-list"></div>
+              </div>
+              <div class="price-breakdown">
+                <div
+                  class="original-price"
+                  id="final-original-price"
+                  style="display: none"
+                ></div>
+                <div class="current-price" id="final-current-price">
+                  0.00 CHF
+                </div>
+                <div class="billing-period" id="final-billing-period"></div>
+              </div>
+              <div
+                class="savings-info"
+                id="final-savings-info"
+                style="display: none"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Configuration des prix de base et remises
+      const basePrice = 180.0; // Prix de base par portfolio (6 mois)
+      const volumeDiscounts = {
+        1: 0, // 0% de remise
+        2: 0.1, // 10% de remise
+        3: 0.2, // 20% de remise
+        4: 0.3, // 30% de remise
+      };
+      const annualDiscount = 0.1; // 10% de remise supplémentaire pour l'annuel
+
+      // Mapping des price IDs Stripe - Working subscription prices
+      const stripePriceIds = {
+        biannual: {
+          1: 'price_1RvFTuQEcoJQ0jjtM2w4NY02', // 6-month recurring - 180 CHF
+          2: 'price_1RvFTuQEcoJQ0jjtM2w4NY02', // Same price for all portfolio counts
+          3: 'price_1RvFTuQEcoJQ0jjtM2w4NY02', // Frontend handles quantity discount display
+          4: 'price_1RvFTuQEcoJQ0jjtM2w4NY02',
+        },
+        annual: {
+          1: 'price_1RvFU1QEcoJQ0jjtF1HGR3QY', // 1-year recurring - 324 CHF
+          2: 'price_1RvFU1QEcoJQ0jjtF1HGR3QY', // Same price for all portfolio counts
+          3: 'price_1RvFU1QEcoJQ0jjtF1HGR3QY', // Frontend handles quantity discount display
+          4: 'price_1RvFU1QEcoJQ0jjtF1HGR3QY',
+        },
+      };
+
+      // État de l'application
+      let selectedPortfolios = [];
+      let currentBilling = 'biannual';
+      let currentStep = 1;
+      let currentPriceId = '';
+
+      // Portfolio names mapping
+      const portfolioNames = {
+        immo: 'ImmoFolio',
+        crypto: 'CryptoFolio',
+        indirect: 'IndirectCryptoFolio',
+        techno: 'TechnoFolio',
+      };
+
+      // Initialize Stripe - You need to replace this with your own publishable key
+      const STRIPE_PUBLISHABLE_KEY =
+        'pk_test_51RUOnNQEcoJQ0jjtGrI6uKMqjFtwsoMlKCOvsnxlOFKe0Llopj6kUyIXgfebzEiBrqDEGSPuKIrJKy9FL8UOIKyl006Q28P2r6';
+
+      if (STRIPE_PUBLISHABLE_KEY === 'pk_test_YOUR_PUBLISHABLE_KEY_HERE') {
+        document.body.innerHTML = `
+          <div style="padding: 40px; text-align: center; font-family: Arial;">
+            <h1>🔧 Configuration Required</h1>
+            <p>Please update the Stripe publishable key in stripe_payment_page.html</p>
+            <p>Replace <code>pk_test_YOUR_PUBLISHABLE_KEY_HERE</code> with your actual key</p>
+            <p><a href="https://dashboard.stripe.com/test/apikeys" target="_blank">Get your keys here</a></p>
+          </div>
+        `;
+        throw new Error('Stripe publishable key not configured');
+      }
+
+      const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+      let elements, cardElement;
+
+      // Create Stripe card element
+      function createCardElement() {
+        elements = stripe.elements();
+        cardElement = elements.create('card', {
+          style: {
+            base: {
+              fontSize: '16px',
+              color: '#424770',
+              '::placeholder': {
+                color: '#aab7c4',
+              },
+            },
+            invalid: {
+              color: '#9e2146',
+            },
+          },
+        });
+
+        cardElement.mount('#card-element');
+
+        // Handle real-time validation errors from the card Element
+        cardElement.addEventListener('change', ({ error }) => {
+          const displayError = document.getElementById('card-errors');
+          if (error) {
+            displayError.innerHTML = `<div class="error-message">${error.message}</div>`;
+          } else {
+            displayError.innerHTML = '';
+          }
+        });
+      }
+
+      // Fonctions de calcul de prix
+      function calculatePrice(portfolioCount, billing) {
+        if (portfolioCount === 0) return { total: 0, original: 0, discount: 0 };
+
+        const originalTotal =
+          basePrice * portfolioCount * (billing === 'annual' ? 2 : 1);
+        let discountedTotal = originalTotal;
+
+        // Appliquer la remise de volume
+        const volumeDiscount = volumeDiscounts[portfolioCount] || 0;
+        discountedTotal *= 1 - volumeDiscount;
+
+        // Appliquer la remise annuelle
+        if (billing === 'annual') {
+          discountedTotal *= 1 - annualDiscount;
+        }
+
+        return {
+          total: discountedTotal,
+          original: originalTotal,
+          discount: originalTotal - discountedTotal,
+        };
+      }
+
+      function updatePricing() {
+        const portfolioCount = selectedPortfolios.length;
+        const pricing = calculatePrice(portfolioCount, currentBilling);
+
+        // Mettre à jour les éléments de prix dans l'étape 1
+        updatePriceElements('', pricing, portfolioCount);
+
+        // Mettre à jour les éléments de prix dans l'étape 2
+        updatePriceElements('final-', pricing, portfolioCount);
+
+        // Mettre à jour l'ID de prix Stripe
+        currentPriceId = stripePriceIds[currentBilling][portfolioCount] || '';
+      }
+
+      function updatePriceElements(prefix, pricing, portfolioCount) {
+        const priceElement = document.getElementById(prefix + 'current-price');
+        const originalPriceElement = document.getElementById(
+          prefix + 'original-price'
+        );
+        const billingPeriodElement = document.getElementById(
+          prefix + 'billing-period'
+        );
+        const savingsInfoElement = document.getElementById(
+          prefix + 'savings-info'
+        );
+        // Fix: ensure correct element ID for selected list
+        const selectedListId =
+          prefix === 'final-' ? 'final-selected-list' : 'selected-list';
+        const selectedListElement = document.getElementById(selectedListId);
+
+        // Defensive: if any expected element is missing, skip updates to avoid runtime errors
+        if (
+          !priceElement ||
+          !originalPriceElement ||
+          !billingPeriodElement ||
+          !savingsInfoElement ||
+          !selectedListElement
+        ) {
+          return;
+        }
+
+        if (portfolioCount === 0) {
+          priceElement.textContent = '0.00 CHF';
+          originalPriceElement.style.display = 'none';
+          savingsInfoElement.style.display = 'none';
+          billingPeriodElement.textContent =
+            'Sélectionnez au moins un portfolio';
+          selectedListElement.textContent = 'Aucun portfolio sélectionné';
+          return;
+        }
+
+        // Mettre à jour le prix affiché
+        priceElement.textContent = `${pricing.total.toFixed(2)} CHF`;
+
+        // Mettre à jour la liste des portfolios sélectionnés
+        selectedListElement.textContent = selectedPortfolios.join(', ');
+
+        // Mettre à jour le prix d'origine si applicable
+        if (pricing.discount > 0) {
+          originalPriceElement.textContent = `${pricing.original.toFixed(
+            2
+          )} CHF`;
+          originalPriceElement.style.display = 'block';
+
+          const savingsPercent = Math.round(
+            (pricing.discount / pricing.original) * 100
+          );
+          let savingsText = `💰 Économie de ${pricing.discount.toFixed(
+            2
+          )} CHF (${savingsPercent}%)`;
+
+          savingsInfoElement.textContent = savingsText;
+          savingsInfoElement.style.display = 'block';
+        } else {
+          originalPriceElement.style.display = 'none';
+          savingsInfoElement.style.display = 'none';
+        }
+
+        // Mettre à jour la période de facturation
+        const billingText =
+          currentBilling === 'annual'
+            ? 'Facturé annuellement'
+            : 'Facturé tous les 6 mois';
+        billingPeriodElement.textContent = billingText;
+      }
+
+      function updatePortfolioSelection() {
+        selectedPortfolios = [];
+        const checkboxes = document.querySelectorAll('.portfolio-input');
+
+        checkboxes.forEach((checkbox) => {
+          const card = checkbox.closest('.portfolio-card');
+          const portfolioKey = card.dataset.portfolio;
+
+          if (checkbox.checked) {
+            selectedPortfolios.push(portfolioNames[portfolioKey]);
+            card.classList.add('selected');
+          } else {
+            card.classList.remove('selected');
+          }
+        });
+
+        updatePricing();
+        updateContinueButton();
+      }
+
+      function updateBillingSelection(billing) {
+        currentBilling = billing;
+
+        // Mettre à jour l'affichage des options
+        document.querySelectorAll('.billing-option').forEach((option) => {
+          option.classList.remove('selected');
+          if (option.dataset.billing === billing) {
+            option.classList.add('selected');
+          }
+        });
+
+        updatePricing();
+      }
+
+      function updateContinueButton() {
+        const continueBtn = document.getElementById('continue-btn');
+        if (selectedPortfolios.length > 0) {
+          continueBtn.disabled = false;
+          continueBtn.textContent = `Continuer vers le paiement (${
+            selectedPortfolios.length
+          } portfolio${selectedPortfolios.length > 1 ? 's' : ''})`;
+        } else {
+          continueBtn.disabled = true;
+          continueBtn.textContent = 'Continuer vers le paiement';
+        }
+      }
+
+      function goToStep(step) {
+        // Masquer tous les contenus d'étapes
+        document.querySelectorAll('.step-content').forEach((content) => {
+          content.classList.remove('active');
+        });
+
+        // Afficher le contenu de l'étape actuelle
+        document.getElementById(`step-${step}`).classList.add('active');
+
+        // Mettre à jour les indicateurs d'étapes
+        document.querySelectorAll('.step').forEach((stepEl, index) => {
+          stepEl.classList.remove('active', 'completed');
+          if (index + 1 === step) {
+            stepEl.classList.add('active');
+          } else if (index + 1 < step) {
+            stepEl.classList.add('completed');
+          }
+        });
+
+        currentStep = step;
+
+        // Créer l'élément carte si on arrive à l'étape 2
+        if (step === 2) {
+          createCardElement();
+          updatePricing(); // S'assurer que les prix sont à jour
+        }
+      }
+
+      // Gestionnaires d'événements
+      document.addEventListener('DOMContentLoaded', () => {
+        // Portfolio selection
+        document.querySelectorAll('.portfolio-input').forEach((checkbox) => {
+          checkbox.addEventListener('change', updatePortfolioSelection);
+        });
+
+        // Billing selection
+        document.querySelectorAll('.billing-option').forEach((option) => {
+          option.addEventListener('click', () => {
+            const billing = option.dataset.billing;
+            updateBillingSelection(billing);
+          });
+        });
+
+        // Portfolio card clicks
+        document.querySelectorAll('.portfolio-card').forEach((card) => {
+          card.addEventListener('click', (e) => {
+            if (e.target.type !== 'checkbox') {
+              const checkbox = card.querySelector('.portfolio-input');
+              checkbox.checked = !checkbox.checked;
+              updatePortfolioSelection();
+            }
+          });
+        });
+
+        // Navigation buttons
+        document
+          .getElementById('continue-btn')
+          .addEventListener('click', () => {
+            goToStep(2);
+          });
+
+        document.getElementById('back-btn').addEventListener('click', () => {
+          goToStep(1);
+        });
+
+        // Payment form
+        const form = document.getElementById('payment-form');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const resultDiv = document.getElementById('payment-result');
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+
+          // Désactiver le bouton et afficher le chargement
+          submitButton.disabled = true;
+          buttonText.innerHTML = '<span class="loading"></span>Traitement...';
+
+          // Récupérer les données du formulaire
+          const email = document.getElementById('email').value;
+          const name = document.getElementById('name').value;
+
+          try {
+            // Step 1: Create subscription on the backend
+            const response = await fetch('/create-subscription', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: email,
+                name: name,
+                priceId: currentPriceId,
+                portfolios: selectedPortfolios,
+              }),
+            });
+
+            const result = await response.json();
+
+            if (result.error) {
+              throw new Error(result.error.message);
+            }
+
+            // Step 2: Confirm payment with the client secret
+            const { error: stripeError } = await stripe.confirmCardPayment(
+              result.clientSecret,
+              {
+                payment_method: {
+                  card: cardElement,
+                  billing_details: {
+                    name: name,
+                    email: email,
+                  },
+                },
+              }
+            );
+
+            if (stripeError) {
+              resultDiv.innerHTML = `<div class="error-message">${stripeError.message}</div>`;
+            } else {
+              const pricing = calculatePrice(
+                selectedPortfolios.length,
+                currentBilling
+              );
+              resultDiv.innerHTML = `
+                            <div class="success-message">
+                                ✅ Paiement effectué avec succès!<br>
+                                <strong>Portfolios sélectionnés:</strong> ${selectedPortfolios.join(
+                                  ', '
+                                )}<br>
+                                <strong>Période:</strong> ${
+                                  currentBilling === 'annual'
+                                    ? 'Annuel'
+                                    : 'Bi-annuel'
+                                }<br>
+                                <strong>Prix:</strong> ${pricing.total.toFixed(
+                                  2
+                                )} CHF<br>
+                                <strong>Subscription ID:</strong> ${
+                                  result.subscriptionId
+                                }<br>
+                                <br>
+                                <strong>Votre abonnement est maintenant actif!</strong>
+                            </div>
+                        `;
+            }
+          } catch (err) {
+            resultDiv.innerHTML = `<div class="error-message">Une erreur s'est produite: ${err.message}</div>`;
+          }
+
+          submitButton.disabled = false;
+          const pricing = calculatePrice(
+            selectedPortfolios.length,
+            currentBilling
+          );
+          buttonText.textContent = `Payer ${pricing.total.toFixed(2)} CHF`;
+        });
+
+        // Initialisation
+        updateBillingSelection('biannual');
+        updatePricing();
+        updateContinueButton();
+      });
+
+      console.log('🎯 Version démo - Interface en deux étapes');
+      console.log(
+        '📋 Pour tester: sélectionnez des portfolios puis utilisez 4242424242424242'
+      );
+    </script>
+  </body>
+</html>
