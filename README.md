@@ -10,7 +10,7 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
 - **💳 Stripe Integration**: Secure subscription-based payments
 - **📱 Responsive Design**: Optimized for all devices
 - **🎨 Modern UI/UX**: Balder App design system with premium styling
-- **💰 Investment Portfolios**: 
+- **💰 Investment Portfolios**:
   - ImmoFolio (Real Estate)
   - CryptoFolio (Direct Crypto)
   - IndirectCryptoFolio (Crypto Stocks/ETFs)
@@ -29,27 +29,31 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
 ### Local Development
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/openfolio-stripe-payment.git
    cd openfolio-stripe-payment
    ```
 
 2. **Create virtual environment**:
+
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
 3. **Install dependencies**:
+
    ```bash
    pip install -r requirements.txt
    ```
 
 4. **Set up environment variables**:
+
    ```bash
    # Create .env file
    cp .env.example .env
-   
+
    # Add your Stripe keys
    STRIPE_SECRET_KEY=sk_test_your_secret_key_here
    STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
@@ -57,6 +61,7 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
    ```
 
 5. **Run the development server**:
+
    ```bash
    python server.py
    ```
@@ -72,16 +77,19 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
 ### Manual Deployment
 
 1. **Install Vercel CLI**:
+
    ```bash
    npm i -g vercel
    ```
 
 2. **Login to Vercel**:
+
    ```bash
    vercel login
    ```
 
 3. **Deploy**:
+
    ```bash
    vercel --prod
    ```
@@ -98,10 +106,16 @@ In your Vercel dashboard:
 2. Navigate to "Environment Variables"
 3. Add the following variables:
 
-| Variable | Value | Environment |
-|----------|-------|-------------|
-| `STRIPE_SECRET_KEY` | `sk_test_...` or `sk_live_...` | All |
-| `PORT` | `4242` | All |
+| Variable            | Value                          | Environment |
+| ------------------- | ------------------------------ | ----------- |
+| `STRIPE_SECRET_KEY` | `sk_test_...` or `sk_live_...` | All         |
+| `PORT`              | `4242`                         | All         |
+
+### Vercel Runtime Notes
+
+- The Flask app is exposed as a WSGI application via `app = create_app()` in `server.py` so Vercel can import it.
+- `vercel.json` routes map `/` to `open_folio_multilingual_landing_fr_de_en_with_i_18_n.html` and `/payment` to `stripe_payment_page.html`. All other paths fall back to `server.py`.
+- Make sure your Vercel project has the `STRIPE_SECRET_KEY` environment variable set; otherwise, API routes will return a configuration error.
 
 ## 📁 Project Structure
 
@@ -132,6 +146,7 @@ openfolio-stripe-payment/
 ### Request/Response Examples
 
 **Create Subscription**:
+
 ```json
 POST /create-subscription
 {
@@ -172,27 +187,28 @@ The application uses the **Balder App** design system:
 
 ### Test Cards (Stripe Test Mode)
 
-| Card Number | Brand | Description |
-|-------------|-------|-------------|
-| `4242424242424242` | Visa | Successful payment |
+| Card Number        | Brand      | Description        |
+| ------------------ | ---------- | ------------------ |
+| `4242424242424242` | Visa       | Successful payment |
 | `5555555555554444` | Mastercard | Successful payment |
-| `4000000000000002` | Visa | Declined payment |
+| `4000000000000002` | Visa       | Declined payment   |
 
 ### Test Webhooks
 
 Use Stripe CLI for local webhook testing:
+
 ```bash
 stripe listen --forward-to localhost:4242/webhook
 ```
 
 ## 📊 Portfolio Pricing
 
-| Portfolio | 6 Months | 12 Months | Savings |
-|-----------|----------|-----------|---------|
-| 1 Portfolio | 180 CHF | 324 CHF | 10% |
-| 2 Portfolios | 324 CHF | 583 CHF | 20% |
-| 3 Portfolios | 432 CHF | 778 CHF | 30% |
-| 4 Portfolios | 504 CHF | 907 CHF | 40% |
+| Portfolio    | 6 Months | 12 Months | Savings |
+| ------------ | -------- | --------- | ------- |
+| 1 Portfolio  | 180 CHF  | 324 CHF   | 10%     |
+| 2 Portfolios | 324 CHF  | 583 CHF   | 20%     |
+| 3 Portfolios | 432 CHF  | 778 CHF   | 30%     |
+| 4 Portfolios | 504 CHF  | 907 CHF   | 40%     |
 
 ## 🚀 Performance
 

@@ -254,6 +254,10 @@ def create_app() -> Flask:
     return app
 
 
+# Expose WSGI app at module level for Vercel (@vercel/python) to detect
+# This ensures the serverless function can import `server.app`
+app = create_app()
+
 if __name__ == "__main__":
     # Optional: load .env if present
     try:
