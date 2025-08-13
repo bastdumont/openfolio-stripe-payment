@@ -27,9 +27,5 @@
       "src": "/(.*)",
       "dest": "server.py"
     }
-  ],
-  "env": {
-    "STRIPE_SECRET_KEY": "@stripe_secret_key",
-    "PORT": "4242"
-  }
+  ]
 }
