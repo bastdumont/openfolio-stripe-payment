@@ -10,11 +10,19 @@
       "use": "@vercel/static"
     },
     {
-      "src": "stripe_payment_page.html", 
+      "src": "stripe_payment_page.html",
       "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "^/open_folio_multilingual_landing_fr_de_en_with_i_18_n$",
+      "dest": "/open_folio_multilingual_landing_fr_de_en_with_i_18_n.html"
+    },
+    {
+      "src": "^/stripe_payment_page$",
+      "dest": "/stripe_payment_page.html"
+    },
     {
       "src": "/(.*)",
       "dest": "server.py"
@@ -23,10 +31,5 @@
   "env": {
     "STRIPE_SECRET_KEY": "@stripe_secret_key",
     "PORT": "4242"
-  },
-  "functions": {
-    "server.py": {
-      "maxDuration": 30
-    }
   }
 }
