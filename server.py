@@ -79,16 +79,17 @@ def create_app() -> Flask:
             price = stripe.Price.retrieve(price_id)
             
             # Create a payment intent for the subscription
+            # Create a card-only PaymentIntent to avoid showing Link or other methods automatically
             payment_intent = stripe.PaymentIntent.create(
                 amount=price.unit_amount,
                 currency=price.currency,
                 customer=customer.id,
+                payment_method_types=["card"],  # ensure only card (used by Apple Pay / Google Pay tokenized as card)
                 metadata={
                     "portfolios": ", ".join(portfolios) if portfolios else "N/A",
                     "portfolio_count": str(len(portfolios)),
                     "price_id": price_id
-                },
-                automatic_payment_methods={"enabled": True}
+                }
             )
             
             # Create the subscription in incomplete state

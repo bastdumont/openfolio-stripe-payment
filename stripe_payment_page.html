@@ -9,6 +9,12 @@
       href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <!-- Icons: Font Awesome for feature bullets -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
     <title>Sparrtner Portfolio - Paiement</title>
     <!-- Load Stripe.js for payment processing -->
     <script src="https://js.stripe.com/v3/"></script>
@@ -161,6 +167,7 @@
         margin-bottom: var(--space-12);
         padding: var(--space-8) 0;
         position: relative;
+        align-items: center; /* Ensure circles and separator are vertically centered */
       }
 
       .steps-indicator::before {
@@ -223,6 +230,7 @@
         bottom: 0;
         background: var(--gradient-primary);
         opacity: 0;
+        z-index: -1; /* Keep overlay behind the number for visibility */
         transition: opacity var(--duration-300) var(--ease-out);
       }
 
@@ -249,6 +257,7 @@
         transition: all var(--duration-300) var(--ease-out);
         position: relative;
         overflow: hidden;
+        align-self: center; /* Center the separator relative to step circles */
       }
 
       .step-connector::before {
@@ -351,7 +360,7 @@
 
       .portfolio-card {
         border: 2px solid var(--color-border);
-        border-radius: var(--radius-xl);
+        border-radius: var(--radius-2xl);
         padding: var(--space-8);
         cursor: pointer;
         transition: all var(--duration-300) var(--ease-out);
@@ -430,6 +439,15 @@
         letter-spacing: -0.01em;
       }
 
+      .portfolio-icon {
+        font-size: 3rem;
+        color: var(--color-primary);
+        margin-top: var(--space-4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
       .portfolio-desc {
         color: var(--color-text-muted);
         margin-bottom: var(--space-6);
@@ -446,8 +464,25 @@
       }
 
       .portfolio-features li {
+        list-style: none;
         margin-bottom: var(--space-2);
-        padding-left: var(--space-3);
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+      }
+
+      .feature-item i {
+        color: var(--color-primary);
+        width: 18px;
+        text-align: center;
+        opacity: 0.95;
+      }
+
+      .feature-item span {
+        line-height: 1.55;
       }
 
       .billing-selector {
@@ -600,17 +635,17 @@
 
       .btn {
         position: relative;
-        padding: var(--space-4) var(--space-8);
+        padding: var(--space-5) var(--space-10);
         border-radius: var(--radius-lg);
         font-weight: var(--font-weight-bold);
         cursor: pointer;
         transition: all var(--duration-300) var(--ease-out);
         border: 2px solid transparent;
-        font-size: 1rem;
+        font-size: 1.1rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         font-family: 'Heebo', sans-serif;
-        min-width: 200px;
+        min-width: 260px;
         overflow: hidden;
         backdrop-filter: blur(10px);
         display: inline-flex;
@@ -660,7 +695,7 @@
       }
 
       .btn-primary:hover {
-        transform: translateY(-4px);
+        transform: translateY(-4px) scale(1.01);
         box-shadow: var(--shadow-2xl), 0 0 0 1px rgba(255, 181, 0, 0.2);
         filter: brightness(1.05);
       }
@@ -715,7 +750,6 @@
       }
 
       .form-section {
-        /* Styles for form section */
       }
 
       .form-title {
@@ -818,6 +852,36 @@
         border-left: 4px solid #4caf50;
         border: 1px solid #c8e6c9;
         line-height: 1.5;
+      }
+
+      /* Wallets (Apple Pay / Google Pay) */
+      .wallets-container {
+        margin: var(--space-8) 0;
+        display: none; /* Shown only if supported */
+      }
+
+      .wallets-divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        color: var(--color-text-muted);
+        margin: var(--space-8) 0;
+        font-weight: var(--font-weight-medium);
+      }
+
+      .wallets-divider::before,
+      .wallets-divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .wallets-divider:not(:empty)::before {
+        margin-right: var(--space-4);
+      }
+
+      .wallets-divider:not(:empty)::after {
+        margin-left: var(--space-4);
       }
 
       .loading {
@@ -1210,51 +1274,33 @@
               <div class="portfolio-card" data-portfolio="immo">
                 <input type="checkbox" class="portfolio-input" id="immo" />
                 <div class="portfolio-name">ImmoFolio</div>
-                <div class="portfolio-desc">
-                  Investissement immobilier diversifié
+                <div class="portfolio-icon">
+                  <i class="fa-solid fa-building"></i>
                 </div>
-                <ul class="portfolio-features">
-                  <li>• REITs internationaux</li>
-                  <li>• Crowdfunding immobilier</li>
-                  <li>• Fonds immobiliers</li>
-                </ul>
               </div>
 
               <div class="portfolio-card" data-portfolio="crypto">
                 <input type="checkbox" class="portfolio-input" id="crypto" />
                 <div class="portfolio-name">CryptoFolio</div>
-                <div class="portfolio-desc">
-                  Exposition directe aux cryptomonnaies
+                <div class="portfolio-icon">
+                  <i class="fa-solid fa-coins"></i>
                 </div>
-                <ul class="portfolio-features">
-                  <li>• Bitcoin et Ethereum</li>
-                  <li>• Altcoins sélectionnés</li>
-                  <li>• Stratégie DCA</li>
-                </ul>
               </div>
 
               <div class="portfolio-card" data-portfolio="indirect">
                 <input type="checkbox" class="portfolio-input" id="indirect" />
                 <div class="portfolio-name">IndirectCryptoFolio</div>
-                <div class="portfolio-desc">
-                  Exposition indirecte aux crypto
+                <div class="portfolio-icon">
+                  <i class="fa-solid fa-chart-line"></i>
                 </div>
-                <ul class="portfolio-features">
-                  <li>• Actions d'entreprises crypto</li>
-                  <li>• ETFs blockchain</li>
-                  <li>• Miners et exchanges</li>
-                </ul>
               </div>
 
               <div class="portfolio-card" data-portfolio="techno">
                 <input type="checkbox" class="portfolio-input" id="techno" />
                 <div class="portfolio-name">TechnoFolio</div>
-                <div class="portfolio-desc">Technologies d'avenir</div>
-                <ul class="portfolio-features">
-                  <li>• Intelligence artificielle</li>
-                  <li>• Robotique et automation</li>
-                  <li>• Énergies renouvelables</li>
-                </ul>
+                <div class="portfolio-icon">
+                  <i class="fa-solid fa-robot"></i>
+                </div>
               </div>
             </div>
 
@@ -1309,6 +1355,12 @@
             <div class="form-section">
               <h2 class="form-title">Finaliser le paiement</h2>
               <p class="form-subtitle">Paiement sécurisé par Stripe</p>
+
+              <!-- Apple Pay / Google Pay (shown if supported) -->
+              <div class="wallets-container" id="wallets-container">
+                <div id="payment-request-button"></div>
+                <div class="wallets-divider">ou</div>
+              </div>
 
               <form id="payment-form">
                 <div class="form-group">
@@ -1451,11 +1503,15 @@
 
       const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
       let elements, cardElement;
+      let paymentRequest,
+        paymentRequestButton,
+        paymentRequestSupported = false;
 
       // Create Stripe card element
       function createCardElement() {
         elements = stripe.elements();
         cardElement = elements.create('card', {
+          hidePostalCode: true,
           style: {
             base: {
               fontSize: '16px',
@@ -1481,6 +1537,122 @@
             displayError.innerHTML = '';
           }
         });
+      }
+
+      // Setup Apple Pay / Google Pay button if supported
+      async function setupPaymentRequestButton() {
+        const pricing = calculatePrice(
+          selectedPortfolios.length,
+          currentBilling
+        );
+
+        // Initialize paymentRequest only once
+        if (!paymentRequest) {
+          paymentRequest = stripe.paymentRequest({
+            country: 'CH',
+            currency: 'chf',
+            total: {
+              label: 'OpenFolio - Abonnement',
+              amount: Math.round(pricing.total * 100),
+            },
+            requestPayerName: true,
+            requestPayerEmail: true,
+          });
+
+          const result = await paymentRequest.canMakePayment();
+          if (result) {
+            paymentRequestSupported = true;
+            const container = document.getElementById('wallets-container');
+            container.style.display = 'block';
+
+            if (!elements) {
+              elements = stripe.elements();
+            }
+            paymentRequestButton = elements.create('paymentRequestButton', {
+              paymentRequest,
+              style: {
+                paymentRequestButton: {
+                  type: 'default',
+                  theme: 'light-outline',
+                  height: '48px',
+                },
+              },
+            });
+            paymentRequestButton.mount('#payment-request-button');
+
+            // Handle the wallet payment flow
+            paymentRequest.on('paymentmethod', async (ev) => {
+              const resultDiv = document.getElementById('payment-result');
+              try {
+                // Create subscription server-side to get client secret
+                const response = await fetch('/create-subscription', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    email:
+                      ev.payerEmail || document.getElementById('email').value,
+                    name: ev.payerName || document.getElementById('name').value,
+                    priceId: currentPriceId,
+                    portfolios: selectedPortfolios,
+                  }),
+                });
+                const data = await response.json();
+                if (data.error) {
+                  throw new Error(data.error.message);
+                }
+
+                // Confirm with the wallet payment method, skip next actions
+                const { error: confirmError } = await stripe.confirmCardPayment(
+                  data.clientSecret,
+                  { payment_method: ev.paymentMethod.id },
+                  { handleActions: false }
+                );
+
+                if (confirmError) {
+                  ev.complete('fail');
+                  resultDiv.innerHTML = `<div class="error-message">${confirmError.message}</div>`;
+                } else {
+                  ev.complete('success');
+                  const { error: actionError } =
+                    await stripe.confirmCardPayment(data.clientSecret);
+                  if (actionError) {
+                    resultDiv.innerHTML = `<div class="error-message">${actionError.message}</div>`;
+                  } else {
+                    const finalPricing = calculatePrice(
+                      selectedPortfolios.length,
+                      currentBilling
+                    );
+                    resultDiv.innerHTML = `
+                      <div class="success-message">
+                        ✅ Paiement effectué avec succès!<br>
+                        <strong>Portfolios sélectionnés:</strong> ${selectedPortfolios.join(
+                          ', '
+                        )}<br>
+                        <strong>Période:</strong> ${
+                          currentBilling === 'annual' ? 'Annuel' : 'Bi-annuel'
+                        }<br>
+                        <strong>Prix:</strong> ${finalPricing.total.toFixed(
+                          2
+                        )} CHF<br>
+                        <strong>Subscription ID:</strong> ${data.subscriptionId}
+                      </div>`;
+                  }
+                }
+              } catch (err) {
+                ev.complete('fail');
+                resultDiv.innerHTML = `<div class="error-message">${err.message}</div>`;
+              }
+            });
+          }
+        } else {
+          // Update total when selection/billing changes
+          paymentRequest.update({
+            total: {
+              label: 'OpenFolio - Abonnement',
+              amount: Math.round(pricing.total * 100),
+            },
+          });
+        }
       }
 
       // Fonctions de calcul de prix
@@ -1665,6 +1837,8 @@
         if (step === 2) {
           createCardElement();
           updatePricing(); // S'assurer que les prix sont à jour
+          // Initialize wallets if supported
+          setupPaymentRequestButton();
         }
       }
 
