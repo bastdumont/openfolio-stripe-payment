@@ -12,6 +12,14 @@
     {
       "src": "stripe_payment_page.html",
       "use": "@vercel/static"
+    },
+    {
+      "src": "privacy.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "cg.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -22,6 +30,14 @@
     {
       "src": "^/payment$",
       "dest": "/stripe_payment_page.html"
+    },
+    {
+      "src": "^/privacy$",
+      "dest": "/privacy.html"
+    },
+    {
+      "src": "^/terms$",
+      "dest": "/cg.html"
     },
     {
       "src": "^/open_folio_multilingual_landing_fr_de_en_with_i_18_n$",

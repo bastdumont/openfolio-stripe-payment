@@ -21,6 +21,16 @@ def create_app() -> Flask:
         """Serve the Stripe payment page."""
         return send_from_directory('.', 'stripe_payment_page.html')
 
+    @app.route('/privacy')
+    def privacy():
+        """Serve the privacy policy page."""
+        return send_from_directory('.', 'privacy.html')
+
+    @app.route('/terms')
+    def terms():
+        """Serve the general conditions page."""
+        return send_from_directory('.', 'cg.html')
+
     @app.get("/health")
     def health() -> tuple[dict, int]:
         """Basic health check endpoint."""
