@@ -278,17 +278,24 @@ if __name__ == "__main__":
         pass
 
     # Check if Stripe key is provided
-    if not os.environ.get("STRIPE_SECRET_KEY"):
+    stripe_key = os.environ.get("STRIPE_SECRET_KEY", "")
+    if not stripe_key:
         print("❌ ERROR: No Stripe secret key found!")
-        print("📝 Please set your Stripe test secret key:")
-        print("   export STRIPE_SECRET_KEY=sk_test_your_key_here")
+        print("📝 Please set your Stripe secret key (test or live):")
+        print("   export STRIPE_SECRET_KEY=sk_test_your_key_here  # for test mode")
+        print("   export STRIPE_SECRET_KEY=sk_live_your_key_here   # for live mode")
         print("   python server.py")
-        print("\n🔗 Get your test keys from: https://dashboard.stripe.com/test/apikeys")
+        print("\n🔗 Get your keys from:")
+        print("   Test: https://dashboard.stripe.com/test/apikeys")
+        print("   Live: https://dashboard.stripe.com/apikeys")
         exit(1)
 
     port = int(os.environ.get("PORT", "4242"))
     app = create_app()
+    is_test_mode = stripe_key.startswith('sk_test_')
+    mode_text = "TEST MODE" if is_test_mode else "LIVE MODE ⚠️  PRODUCTION"
+    mode_emoji = "🧪" if is_test_mode else "🚀"
     print(f"🚀 Starting server on http://localhost:{port}")
-    print(f"💳 Stripe test mode: {os.environ.get('STRIPE_SECRET_KEY', '').startswith('sk_test_')}")
+    print(f"💳 Stripe {mode_emoji} {mode_text}")
     print(f"📄 Open http://localhost:{port} in your browser to see the payment page")
     app.run(host="0.0.0.0", port=port, debug=True)

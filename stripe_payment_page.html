@@ -1407,13 +1407,10 @@
                 <div id="payment-result"></div>
               </form>
 
-              <div class="security-note">
+              <div class="security-note" id="security-note">
                 🔒 <strong>PAIEMENT SÉCURISÉ</strong> - Interface de sélection
                 multiple pour portfolios spécialisés. Vos informations de
-                paiement sont cryptées et sécurisées par Stripe. <br /><br />
-                📋 <strong>Mode test activé :</strong> 4242424242424242 (Visa),
-                5555555555554444 (Mastercard). Aucun vrai paiement ne sera
-                effectué.
+                paiement sont cryptées et sécurisées par Stripe.
               </div>
             </div>
 
@@ -1979,10 +1976,30 @@
         updateContinueButton();
       });
 
-      console.log('🎯 Version démo - Interface en deux étapes');
-      console.log(
-        '📋 Pour tester: sélectionnez des portfolios puis utilisez 4242424242424242'
-      );
+      // Detect if we're in test or live mode
+      const isTestMode = STRIPE_PUBLISHABLE_KEY.startsWith('pk_test_');
+
+      // Update security note based on mode
+      const securityNote = document.getElementById('security-note');
+      if (securityNote && isTestMode) {
+        securityNote.innerHTML = `
+          🔒 <strong>PAIEMENT SÉCURISÉ</strong> - Interface de sélection
+          multiple pour portfolios spécialisés. Vos informations de
+          paiement sont cryptées et sécurisées par Stripe. <br /><br />
+          📋 <strong>Mode test activé :</strong> 4242424242424242 (Visa),
+          5555555555554444 (Mastercard). Aucun vrai paiement ne sera
+          effectué.
+        `;
+      }
+
+      if (isTestMode) {
+        console.log('🎯 Stripe Test Mode - Interface en deux étapes');
+        console.log(
+          '📋 Pour tester: sélectionnez des portfolios puis utilisez 4242424242424242'
+        );
+      } else {
+        console.log('🚀 Stripe Live Mode - Production Ready');
+      }
     </script>
   </body>
 </html>
