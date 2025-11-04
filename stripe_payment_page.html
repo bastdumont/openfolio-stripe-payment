@@ -1453,18 +1453,19 @@
       const annualDiscount = 0.1; // 10% de remise supplémentaire pour l'annuel
 
       // Mapping des price IDs Stripe - Working subscription prices
+      // Verified via Stripe MCP: price_1SPjjxGCDHpNGbpgJ1RVlzL8 = 6 months (180 CHF), price_1SPjjxGCDHpNGbpg7PId5lki = 1 year (324 CHF)
       const stripePriceIds = {
         biannual: {
-          1: 'price_1SPjjxGCDHpNGbpg7PId5lki', // LIVE 6-month recurring - 180 CHF
-          2: 'price_1SPjjxGCDHpNGbpg7PId5lki', // Same price for all portfolio counts
-          3: 'price_1SPjjxGCDHpNGbpg7PId5lki', // Frontend handles quantity discount display
-          4: 'price_1SPjjxGCDHpNGbpg7PId5lki',
-        },
-        annual: {
-          1: 'price_1SPjjxGCDHpNGbpgJ1RVlzL8', // LIVE 1-year recurring - 324 CHF
+          1: 'price_1SPjjxGCDHpNGbpgJ1RVlzL8', // LIVE 6-month recurring - 180 CHF (month, interval_count: 6)
           2: 'price_1SPjjxGCDHpNGbpgJ1RVlzL8', // Same price for all portfolio counts
           3: 'price_1SPjjxGCDHpNGbpgJ1RVlzL8', // Frontend handles quantity discount display
           4: 'price_1SPjjxGCDHpNGbpgJ1RVlzL8',
+        },
+        annual: {
+          1: 'price_1SPjjxGCDHpNGbpg7PId5lki', // LIVE 1-year recurring - 324 CHF (year, interval_count: 1)
+          2: 'price_1SPjjxGCDHpNGbpg7PId5lki', // Same price for all portfolio counts
+          3: 'price_1SPjjxGCDHpNGbpg7PId5lki', // Frontend handles quantity discount display
+          4: 'price_1SPjjxGCDHpNGbpg7PId5lki',
         },
       };
 
@@ -1947,9 +1948,8 @@
             }
 
             // Step 2: Confirm payment with the client secret
-            const { error: stripeError } = await stripe.confirmCardPayment(
-              result.clientSecret,
-              {
+            const { error: stripeError, paymentIntent } =
+              await stripe.confirmCardPayment(result.clientSecret, {
                 payment_method: {
                   card: cardElement,
                   billing_details: {
@@ -1957,37 +1957,63 @@
                     email: email,
                   },
                 },
-              }
-            );
+              });
 
             if (stripeError) {
-              resultDiv.innerHTML = `<div class="error-message">${stripeError.message}</div>`;
+              console.error('Payment confirmation error:', stripeError);
+              resultDiv.innerHTML = `<div class="error-message">Erreur de paiement: ${stripeError.message}</div>`;
             } else {
-              const pricing = calculatePrice(
-                selectedPortfolios.length,
-                currentBilling
-              );
-              resultDiv.innerHTML = `
-                            <div class="success-message">
-                                ✅ Paiement effectué avec succès!<br>
-                                <strong>Portfolios sélectionnés:</strong> ${selectedPortfolios.join(
-                                  ', '
-                                )}<br>
-                                <strong>Période:</strong> ${
-                                  currentBilling === 'annual'
-                                    ? 'Annuel'
-                                    : 'Bi-annuel'
-                                }<br>
-                                <strong>Prix:</strong> ${pricing.total.toFixed(
-                                  2
-                                )} CHF<br>
-                                <strong>Subscription ID:</strong> ${
-                                  result.subscriptionId
-                                }<br>
-                                <br>
-                                <strong>Votre abonnement est maintenant actif!</strong>
-                            </div>
-                        `;
+              // Check payment intent status
+              if (paymentIntent && paymentIntent.status === 'succeeded') {
+                const pricing = calculatePrice(
+                  selectedPortfolios.length,
+                  currentBilling
+                );
+                resultDiv.innerHTML = `
+                  <div class="success-message">
+                      ✅ Paiement effectué avec succès!<br>
+                      <strong>Portfolios sélectionnés:</strong> ${selectedPortfolios.join(
+                        ', '
+                      )}<br>
+                      <strong>Période:</strong> ${
+                        currentBilling === 'annual' ? 'Annuel' : 'Bi-annuel'
+                      }<br>
+                      <strong>Prix:</strong> ${pricing.total.toFixed(2)} CHF<br>
+                      <strong>Subscription ID:</strong> ${
+                        result.subscriptionId
+                      }<br>
+                      <strong>Payment Intent:</strong> ${paymentIntent.id}<br>
+                      <br>
+                      <strong>Votre abonnement est maintenant actif!</strong>
+                  </div>
+                `;
+              } else if (
+                paymentIntent &&
+                paymentIntent.status === 'requires_action'
+              ) {
+                // Payment requires additional authentication (3D Secure)
+                resultDiv.innerHTML = `
+                  <div class="error-message">
+                    Authentification requise. Veuillez compléter l'authentification dans la fenêtre qui s'ouvre.
+                  </div>
+                `;
+              } else {
+                // Payment confirmed but status unclear
+                console.log('Payment Intent status:', paymentIntent?.status);
+                resultDiv.innerHTML = `
+                  <div class="success-message">
+                      ✅ Paiement en cours de traitement...<br>
+                      <strong>Subscription ID:</strong> ${
+                        result.subscriptionId
+                      }<br>
+                      <strong>Status:</strong> ${
+                        paymentIntent?.status || 'unknown'
+                      }<br>
+                      <br>
+                      Votre paiement est en cours de validation. Vous recevrez une confirmation par email.
+                  </div>
+                `;
+              }
             }
           } catch (err) {
             resultDiv.innerHTML = `<div class="error-message">Une erreur s'est produite: ${err.message}</div>`;

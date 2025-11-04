@@ -174,21 +174,25 @@ def create_app() -> Flask:
             client_secret = payment_intent.client_secret
             
             # Ensure PaymentIntent only accepts card payments (no Link)
-            # Only modify if payment_method_types exists and is not already ["card"]
+            # Only modify if payment_method_types exists and needs to be restricted
             if hasattr(payment_intent, 'payment_method_types'):
                 current_types = payment_intent.payment_method_types
-                if current_types and "card" not in current_types:
-                    # If card is not in the list, add it
-                    stripe.PaymentIntent.modify(
-                        payment_intent.id,
-                        payment_method_types=["card"]
-                    )
-                elif current_types and len(current_types) > 1 and "card" in current_types:
-                    # If there are multiple types including card, restrict to card only
-                    stripe.PaymentIntent.modify(
-                        payment_intent.id,
-                        payment_method_types=["card"]
-                    )
+                # If payment_method_types includes non-card methods, restrict to card only
+                # This prevents Link from appearing as an option
+                if current_types and (len(current_types) > 1 or "card" not in current_types):
+                    try:
+                        # Modify PaymentIntent to only allow card payments
+                        updated_pi = stripe.PaymentIntent.modify(
+                            payment_intent.id,
+                            payment_method_types=["card"]
+                        )
+                        # Update client_secret in case it changed (it shouldn't, but be safe)
+                        if updated_pi.client_secret != client_secret:
+                            client_secret = updated_pi.client_secret
+                            app.logger.warning(f"Client secret changed after PaymentIntent modification for {payment_intent.id}")
+                    except Exception as e:
+                        # If modification fails, log but continue with original PaymentIntent
+                        app.logger.warning(f"Failed to restrict PaymentIntent payment methods: {str(e)}")
 
             return jsonify({
                 "subscriptionId": subscription.id,
