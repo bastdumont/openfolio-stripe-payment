@@ -11,6 +11,67 @@ def create_app() -> Flask:
     # Configure Stripe using environment variable for security
     stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 
+    # Configure Flask to not show detailed error pages
+    app.config['PROPAGATE_EXCEPTIONS'] = True
+    app.config['DEBUG'] = False  # Disable debug mode in production
+    
+    # Ensure API endpoints always return JSON
+    @app.after_request
+    def after_request(response):
+        """Ensure error responses are JSON for API endpoints."""
+        # Only modify responses for API routes
+        if request.path.startswith('/create-subscription') or \
+           request.path.startswith('/cancel-subscription') or \
+           request.path.startswith('/list-subscriptions'):
+            # If response is an error and not already JSON, convert it
+            if response.status_code >= 400 and 'application/json' not in response.content_type:
+                try:
+                    # Try to parse as JSON first
+                    import json
+                    data = response.get_data(as_text=True)
+                    # If it's HTML, replace with JSON error
+                    if data and ('<html>' in data.lower() or '<!doctype' in data.lower()):
+                        return jsonify({
+                            "error": {
+                                "message": "Internal server error. Please try again later.",
+                                "type": "server_error"
+                            }
+                        }), response.status_code
+                except:
+                    pass
+            # Always set Content-Type to JSON for API endpoints
+            response.headers['Content-Type'] = 'application/json'
+        return response
+    
+    # Global error handler to ensure all errors return JSON
+    @app.errorhandler(500)
+    def internal_error(error):
+        """Handle 500 errors and return JSON instead of HTML."""
+        import traceback
+        error_trace = traceback.format_exc()
+        app.logger.error(f"Internal server error: {str(error)}\n{error_trace}")
+        return jsonify({
+            "error": {
+                "message": "Internal server error. Please try again later.",
+                "type": "server_error"
+            }
+        }), 500
+
+    # Register error handler for all exceptions at the Flask level
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        """Handle any unhandled exceptions and return JSON."""
+        import traceback
+        error_trace = traceback.format_exc()
+        app.logger.error(f"Unhandled exception: {str(e)}\n{error_trace}")
+        # Make sure we return JSON, never HTML
+        return jsonify({
+            "error": {
+                "message": f"An error occurred: {str(e)}",
+                "type": "unhandled_error"
+            }
+        }), 500
+
     @app.route('/')
     def index():
         """Serve the OpenFolio landing page as home page."""
@@ -53,11 +114,31 @@ def create_app() -> Flask:
                 }
             }), 500
 
-        data = request.get_json(silent=True) or {}
-        email = data.get("email")
-        name = data.get("name")
-        price_id = data.get("priceId")
-        portfolios = data.get("portfolios", [])
+        # Get JSON data from request with proper error handling
+        try:
+            data = request.get_json(force=False, silent=True)
+            if data is None:
+                # Try to get raw data and parse manually if needed
+                if request.is_json:
+                    data = {}
+                else:
+                    return jsonify({
+                        "error": {
+                            "message": "Invalid request. JSON body required."
+                        }
+                    }), 400
+        except Exception as e:
+            app.logger.error(f"Error parsing JSON request: {str(e)}")
+            return jsonify({
+                "error": {
+                    "message": f"Error parsing request: {str(e)}"
+                }
+            }), 400
+        
+        email = data.get("email") if data else None
+        name = data.get("name") if data else None
+        price_id = data.get("priceId") if data else None
+        portfolios = data.get("portfolios", []) if data else []
 
         if not email or not name or not price_id:
             return jsonify({
@@ -139,18 +220,35 @@ def create_app() -> Flask:
             # The PaymentIntent is automatically created by Stripe for the invoice
             latest_invoice = subscription.latest_invoice
             
+            if not latest_invoice:
+                app.logger.error(f"No latest_invoice found for subscription {subscription.id}")
+                return jsonify({
+                    "error": {
+                        "message": "Invoice not available. Please try again."
+                    }
+                }), 500
+            
             # Handle both expanded and non-expanded invoice objects
-            if isinstance(latest_invoice, str):
-                # If it's just an ID, retrieve the invoice with PaymentIntent expanded
-                invoice = stripe.Invoice.retrieve(latest_invoice, expand=["payment_intent"])
-                payment_intent = invoice.payment_intent
-            else:
-                # Invoice is already expanded
-                payment_intent = latest_invoice.payment_intent
+            try:
+                if isinstance(latest_invoice, str):
+                    # If it's just an ID, retrieve the invoice with PaymentIntent expanded
+                    invoice = stripe.Invoice.retrieve(latest_invoice, expand=["payment_intent"])
+                    payment_intent = invoice.payment_intent
+                else:
+                    # Invoice is already expanded
+                    payment_intent = latest_invoice.payment_intent
+            except Exception as e:
+                app.logger.error(f"Error retrieving invoice: {str(e)}")
+                return jsonify({
+                    "error": {
+                        "message": f"Error retrieving invoice: {str(e)}"
+                    }
+                }), 500
             
             # If payment_intent is None, the invoice might not have a payment intent yet
             if payment_intent is None:
-                app.logger.error(f"No PaymentIntent found for subscription {subscription.id}, invoice {latest_invoice.id if hasattr(latest_invoice, 'id') else latest_invoice}")
+                invoice_id = latest_invoice.id if hasattr(latest_invoice, 'id') else str(latest_invoice)
+                app.logger.error(f"No PaymentIntent found for subscription {subscription.id}, invoice {invoice_id}")
                 return jsonify({
                     "error": {
                         "message": "PaymentIntent not available. Please try again."
@@ -158,13 +256,22 @@ def create_app() -> Flask:
                 }), 500
             
             # Handle both expanded and non-expanded PaymentIntent objects
-            if isinstance(payment_intent, str):
-                # If it's just an ID, retrieve the PaymentIntent
-                payment_intent = stripe.PaymentIntent.retrieve(payment_intent)
+            try:
+                if isinstance(payment_intent, str):
+                    # If it's just an ID, retrieve the PaymentIntent
+                    payment_intent = stripe.PaymentIntent.retrieve(payment_intent)
+            except Exception as e:
+                app.logger.error(f"Error retrieving PaymentIntent: {str(e)}")
+                return jsonify({
+                    "error": {
+                        "message": f"Error retrieving PaymentIntent: {str(e)}"
+                    }
+                }), 500
             
             # Ensure we have a client_secret
             if not hasattr(payment_intent, 'client_secret') or not payment_intent.client_secret:
-                app.logger.error(f"No client_secret found for PaymentIntent {payment_intent.id}")
+                payment_intent_id = payment_intent.id if hasattr(payment_intent, 'id') else 'unknown'
+                app.logger.error(f"No client_secret found for PaymentIntent {payment_intent_id}")
                 return jsonify({
                     "error": {
                         "message": "PaymentIntent client secret not available. Please try again."
