@@ -517,58 +517,47 @@ def create_app() -> Flask:
             # Step 4: Create the subscription with the saved payment method
             # According to Stripe docs: https://docs.stripe.com/billing/subscriptions/overview#subscription-lifecycle
             # The payment method must be attached BEFORE creating the subscription
-            # We create the subscription which will automatically create an invoice
+            # We set collection_method="charge_automatically" to ensure card payment, not invoice payment
             subscription = stripe.Subscription.create(
                 customer=customer_id,
                 items=[{"price": price_id}],
                 default_payment_method=payment_method_id,
+                collection_method="charge_automatically",  # Force card payment, not invoice payment
                 payment_settings={
                     "save_default_payment_method": "on_subscription"
                 },
-                # Since we already collected payment via PaymentIntent, we can set payment_behavior
-                # to allow incomplete, then we'll pay the invoice manually
-                payment_behavior="allow_incomplete",
+                # Since payment already succeeded via PaymentIntent, Stripe will automatically
+                # charge the initial invoice with the saved payment method
                 metadata={
                     "portfolios": ", ".join(portfolios) if portfolios else "N/A",
                     "portfolio_count": str(len(portfolios)),
                     "price_id": price_id,
                     "payment_intent_id": payment_intent_id
                 },
-                expand=["latest_invoice"]
+                expand=["latest_invoice.payment_intent"]
             )
             
             app.logger.info(f"Created subscription {subscription.id} with payment method {payment_method_id} for customer {customer_id}, status: {subscription.status}")
             
-            # Step 5: Pay the subscription's initial invoice using the already-succeeded payment
-            # The PaymentIntent already succeeded, so we need to mark the subscription invoice as paid
-            # or pay it with the saved payment method
+            # Step 5: Verify the subscription invoice is automatically charged
+            # With collection_method="charge_automatically" and default_payment_method set,
+            # Stripe should automatically charge the invoice. We just verify it worked.
             if subscription.latest_invoice:
                 invoice = subscription.latest_invoice
                 if isinstance(invoice, str):
                     invoice = stripe.Invoice.retrieve(invoice, expand=["payment_intent"])
                 
-                # If invoice is open/unpaid, pay it with the saved payment method
-                if invoice.status == "open" or invoice.status == "draft":
-                    try:
-                        # Finalize draft invoice if needed
-                        if invoice.status == "draft":
-                            invoice = stripe.Invoice.finalize_invoice(invoice.id)
-                            app.logger.info(f"Finalized invoice {invoice.id}")
-                        
-                        # Pay the invoice using the saved payment method
-                        paid_invoice = stripe.Invoice.pay(
-                            invoice.id,
-                            payment_method=payment_method_id
-                        )
-                        app.logger.info(f"Paid invoice {paid_invoice.id} for subscription {subscription.id}")
-                        
-                        # Refresh subscription to get updated status
-                        subscription = stripe.Subscription.retrieve(subscription.id)
-                        app.logger.info(f"Subscription {subscription.id} status after invoice payment: {subscription.status}")
-                    except Exception as e:
-                        app.logger.error(f"Error paying invoice: {str(e)}")
-                        # Don't fail the request, but log the error
-                        # The subscription might still work if Stripe handles it automatically
+                # Check invoice status
+                if invoice.status == "paid":
+                    app.logger.info(f"Invoice {invoice.id} automatically paid for subscription {subscription.id}")
+                elif invoice.status == "open":
+                    # Invoice is open but should be paid automatically
+                    # This might happen if payment is processing
+                    app.logger.info(f"Invoice {invoice.id} is open for subscription {subscription.id}, payment may be processing")
+                    # Refresh subscription to check updated status
+                    subscription = stripe.Subscription.retrieve(subscription.id)
+                else:
+                    app.logger.warning(f"Invoice {invoice.id} status is {invoice.status} for subscription {subscription.id}")
             
             # Verify subscription has the payment method set correctly
             if subscription.default_payment_method != payment_method_id:
