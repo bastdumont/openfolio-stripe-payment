@@ -97,15 +97,104 @@ def create_app() -> Flask:
         """Basic health check endpoint."""
         return jsonify({"status": "ok", "stripe_configured": bool(stripe.api_key)}), 200
 
-    @app.route("/create-subscription", methods=["POST"])
-    def create_subscription():
-        """Create a Stripe Subscription and return the PaymentIntent client secret.
+    def get_or_create_price(portfolio_count, billing_period, base_product_id):
+        """Get or create a Stripe price with the correct discount based on portfolio count and billing period.
+        
+        Args:
+            portfolio_count: Number of portfolios (1-4)
+            billing_period: 'biannual' or 'annual'
+            base_product_id: The base product ID to use
+            
+        Returns:
+            Stripe Price object
+        """
+        # Discount configuration (matches frontend)
+        base_price = 180.0  # CHF per portfolio for 6 months
+        volume_discounts = {
+            1: 0.0,    # 0% discount
+            2: 0.1,    # 10% discount
+            3: 0.2,    # 20% discount
+            4: 0.3,    # 30% discount
+        }
+        annual_discount = 0.1  # 10% additional discount for annual
+        
+        # Calculate discounted price
+        original_total = base_price * portfolio_count * (2 if billing_period == 'annual' else 1)
+        volume_discount = volume_discounts.get(portfolio_count, 0)
+        discounted_total = original_total * (1 - volume_discount)
+        
+        if billing_period == 'annual':
+            discounted_total *= (1 - annual_discount)
+        
+        # Round to 2 decimal places and convert to cents
+        amount_cents = int(round(discounted_total * 100))
+        
+        # Create lookup key for price identification
+        lookup_key = f"openfolio_{billing_period}_{portfolio_count}_portfolios"
+        
+        # Try to find existing price with this lookup key
+        try:
+            prices = stripe.Price.list(
+                lookup_keys=[lookup_key],
+                active=True,
+                limit=1
+            )
+            if prices.data:
+                return prices.data[0]
+        except Exception as e:
+            app.logger.warning(f"Error searching for existing price: {str(e)}")
+        
+        # Price doesn't exist, create it
+        try:
+            # Determine interval based on billing period
+            if billing_period == 'annual':
+                interval = 'year'
+                interval_count = 1
+            else:  # biannual
+                interval = 'month'
+                interval_count = 6
+            
+            price = stripe.Price.create(
+                product=base_product_id,
+                unit_amount=amount_cents,
+                currency='chf',
+                recurring={
+                    'interval': interval,
+                    'interval_count': interval_count,
+                },
+                lookup_key=lookup_key,
+                metadata={
+                    'portfolio_count': str(portfolio_count),
+                    'billing_period': billing_period,
+                    'original_amount': str(original_total),
+                    'discounted_amount': str(discounted_total),
+                    'volume_discount': str(volume_discount),
+                    'annual_discount_applied': str(billing_period == 'annual')
+                },
+                nickname=f"OpenFolio {billing_period.capitalize()} - {portfolio_count} portfolio{'s' if portfolio_count > 1 else ''}"
+            )
+            app.logger.info(f"Created new price {price.id} for {portfolio_count} portfolios, {billing_period} billing, amount: {discounted_total} CHF")
+            return price
+        except Exception as e:
+            app.logger.error(f"Error creating price: {str(e)}")
+            raise
+
+    @app.route("/create-payment-intent", methods=["POST"])
+    def create_payment_intent():
+        """Create a PaymentIntent for the selected price. Subscription will be created after payment succeeds.
 
         Expected JSON body:
         - email: Customer email
         - name: Customer full name
-        - priceId: Stripe Price ID (recurring)
+        - priceId: Stripe Price ID (recurring) OR portfolioCount and billingPeriod to create price dynamically
         - portfolios: List of selected portfolio names (optional, for metadata)
+        - portfolioCount: Number of portfolios (1-4) - used if priceId not provided
+        - billingPeriod: 'biannual' or 'annual' - used if priceId not provided
+        
+        Returns:
+        - clientSecret: PaymentIntent client secret for frontend confirmation
+        - customerId: Customer ID (created or existing)
+        - priceId: The price ID used
         """
         if not stripe.api_key:
             return jsonify({
@@ -118,7 +207,6 @@ def create_app() -> Flask:
         try:
             data = request.get_json(force=False, silent=True)
             if data is None:
-                # Try to get raw data and parse manually if needed
                 if request.is_json:
                     data = {}
                 else:
@@ -139,46 +227,69 @@ def create_app() -> Flask:
         name = data.get("name") if data else None
         price_id = data.get("priceId") if data else None
         portfolios = data.get("portfolios", []) if data else []
+        portfolio_count = data.get("portfolioCount", len(portfolios) if portfolios else 1)
+        billing_period = data.get("billingPeriod", 'biannual')
 
-        if not email or not name or not price_id:
+        if not email or not name:
             return jsonify({
                 "error": {
-                    "message": "Missing required fields: email, name, priceId"
+                    "message": "Missing required fields: email, name"
                 }
             }), 400
 
         try:
-            # Validate price ID exists and is accessible with current API key mode
-            try:
-                price = stripe.Price.retrieve(price_id)
-                if not price.active:
+            # Get base product ID (use the existing product)
+            base_product_id = "prod_TMSfbpU4NW2fRK"  # The main Portfolio Subscription product
+            
+            # If priceId is provided, validate it; otherwise create/get price based on portfolio count and billing
+            if price_id:
+                try:
+                    price = stripe.Price.retrieve(price_id)
+                    if not price.active:
+                        return jsonify({
+                            "error": {
+                                "message": f"Price {price_id} is not active. Please contact support."
+                            }
+                        }), 400
+                    if price.type != "recurring":
+                        return jsonify({
+                            "error": {
+                                "message": f"Price {price_id} is not a recurring price. Subscriptions require recurring prices."
+                            }
+                        }), 400
+                except stripe.error.InvalidRequestError as e:
+                    app.logger.error(f"Price retrieval failed: {str(e)}")
+                    is_test_key = stripe.api_key.startswith('sk_test_')
+                    is_live_price = price_id.startswith('price_1') and len(price_id) > 20
+                    error_msg = f"Price ID {price_id} not found or not accessible."
+                    if is_test_key and is_live_price:
+                        error_msg += " You're using a TEST API key but a LIVE price ID. Use test price IDs or switch to live API key."
+                    elif not is_test_key and not is_live_price:
+                        error_msg += " You're using a LIVE API key but possibly a test price ID. Use live price IDs."
                     return jsonify({
                         "error": {
-                            "message": f"Price {price_id} is not active. Please contact support."
+                            "message": error_msg,
+                            "type": "invalid_request_error"
                         }
                     }), 400
-                if price.type != "recurring":
+            else:
+                # Create or get price based on portfolio count and billing period
+                if portfolio_count < 1 or portfolio_count > 4:
                     return jsonify({
                         "error": {
-                            "message": f"Price {price_id} is not a recurring price. Subscriptions require recurring prices."
+                            "message": "Portfolio count must be between 1 and 4"
                         }
                     }), 400
-            except stripe.error.InvalidRequestError as e:
-                # Price doesn't exist or wrong mode (test vs live mismatch)
-                app.logger.error(f"Price retrieval failed: {str(e)}")
-                is_test_key = stripe.api_key.startswith('sk_test_')
-                is_live_price = price_id.startswith('price_1') and len(price_id) > 20
-                error_msg = f"Price ID {price_id} not found or not accessible."
-                if is_test_key and is_live_price:
-                    error_msg += " You're using a TEST API key but a LIVE price ID. Use test price IDs or switch to live API key."
-                elif not is_test_key and not is_live_price:
-                    error_msg += " You're using a LIVE API key but possibly a test price ID. Use live price IDs."
-                return jsonify({
-                    "error": {
-                        "message": error_msg,
-                        "type": "invalid_request_error"
-                    }
-                }), 400
+                
+                if billing_period not in ['biannual', 'annual']:
+                    return jsonify({
+                        "error": {
+                            "message": "Billing period must be 'biannual' or 'annual'"
+                        }
+                    }), 400
+                
+                price = get_or_create_price(portfolio_count, billing_period, base_product_id)
+                price_id = price.id
             
             # Check if a customer with this email already exists
             existing_customers = stripe.Customer.list(email=email, limit=1)
@@ -198,117 +309,30 @@ def create_app() -> Flask:
                     }
                 )
 
-            # Create the subscription in incomplete state
-            # Stripe automatically creates a PaymentIntent for the subscription's invoice
-            # when using payment_behavior="default_incomplete"
-            subscription = stripe.Subscription.create(
+            # Create a PaymentIntent for the subscription amount
+            # This will be used to collect payment, then we'll create the subscription
+            payment_intent = stripe.PaymentIntent.create(
+                amount=price.unit_amount,  # Amount in cents
+                currency=price.currency,
                 customer=customer.id,
-                items=[{"price": price_id}],
-                payment_behavior="default_incomplete",
-                payment_settings={
-                    "save_default_payment_method": "on_subscription"
-                },
-                expand=["latest_invoice.payment_intent"],  # Expand to get PaymentIntent details
+                payment_method_types=["card"],  # Only card payments
                 metadata={
+                    "price_id": price_id,
                     "portfolios": ", ".join(portfolios) if portfolios else "N/A",
                     "portfolio_count": str(len(portfolios)),
-                    "price_id": price_id
-                }
+                    "subscription_pending": "true"  # Flag to indicate subscription will be created after payment
+                },
+                description=f"OpenFolio Subscription - {', '.join(portfolios) if portfolios else 'All portfolios'}"
             )
 
-            # Get the client_secret from the subscription's PaymentIntent
-            # The PaymentIntent is automatically created by Stripe for the invoice
-            latest_invoice = subscription.latest_invoice
-            
-            if not latest_invoice:
-                app.logger.error(f"No latest_invoice found for subscription {subscription.id}")
-                return jsonify({
-                    "error": {
-                        "message": "Invoice not available. Please try again."
-                    }
-                }), 500
-            
-            # Handle both expanded and non-expanded invoice objects
-            try:
-                if isinstance(latest_invoice, str):
-                    # If it's just an ID, retrieve the invoice with PaymentIntent expanded
-                    invoice = stripe.Invoice.retrieve(latest_invoice, expand=["payment_intent"])
-                    payment_intent = invoice.payment_intent
-                else:
-                    # Invoice is already expanded
-                    payment_intent = latest_invoice.payment_intent
-            except Exception as e:
-                app.logger.error(f"Error retrieving invoice: {str(e)}")
-                return jsonify({
-                    "error": {
-                        "message": f"Error retrieving invoice: {str(e)}"
-                    }
-                }), 500
-            
-            # If payment_intent is None, the invoice might not have a payment intent yet
-            if payment_intent is None:
-                invoice_id = latest_invoice.id if hasattr(latest_invoice, 'id') else str(latest_invoice)
-                app.logger.error(f"No PaymentIntent found for subscription {subscription.id}, invoice {invoice_id}")
-                return jsonify({
-                    "error": {
-                        "message": "PaymentIntent not available. Please try again."
-                    }
-                }), 500
-            
-            # Handle both expanded and non-expanded PaymentIntent objects
-            try:
-                if isinstance(payment_intent, str):
-                    # If it's just an ID, retrieve the PaymentIntent
-                    payment_intent = stripe.PaymentIntent.retrieve(payment_intent)
-            except Exception as e:
-                app.logger.error(f"Error retrieving PaymentIntent: {str(e)}")
-                return jsonify({
-                    "error": {
-                        "message": f"Error retrieving PaymentIntent: {str(e)}"
-                    }
-                }), 500
-            
-            # Ensure we have a client_secret
-            if not hasattr(payment_intent, 'client_secret') or not payment_intent.client_secret:
-                payment_intent_id = payment_intent.id if hasattr(payment_intent, 'id') else 'unknown'
-                app.logger.error(f"No client_secret found for PaymentIntent {payment_intent_id}")
-                return jsonify({
-                    "error": {
-                        "message": "PaymentIntent client secret not available. Please try again."
-                    }
-                }), 500
-            
-            client_secret = payment_intent.client_secret
-            
-            # Ensure PaymentIntent only accepts card payments (no Link)
-            # Only modify if payment_method_types exists and needs to be restricted
-            if hasattr(payment_intent, 'payment_method_types'):
-                current_types = payment_intent.payment_method_types
-                # If payment_method_types includes non-card methods, restrict to card only
-                # This prevents Link from appearing as an option
-                if current_types and (len(current_types) > 1 or "card" not in current_types):
-                    try:
-                        # Modify PaymentIntent to only allow card payments
-                        updated_pi = stripe.PaymentIntent.modify(
-                            payment_intent.id,
-                            payment_method_types=["card"]
-                        )
-                        # Update client_secret in case it changed (it shouldn't, but be safe)
-                        if updated_pi.client_secret != client_secret:
-                            client_secret = updated_pi.client_secret
-                            app.logger.warning(f"Client secret changed after PaymentIntent modification for {payment_intent.id}")
-                    except Exception as e:
-                        # If modification fails, log but continue with original PaymentIntent
-                        app.logger.warning(f"Failed to restrict PaymentIntent payment methods: {str(e)}")
-
             return jsonify({
-                "subscriptionId": subscription.id,
-                "clientSecret": client_secret,
+                "clientSecret": payment_intent.client_secret,
                 "customerId": customer.id,
+                "priceId": price_id,
+                "paymentIntentId": payment_intent.id
             })
 
         except stripe.error.CardError as e:
-            # Card was declined
             return jsonify({
                 "error": {
                     "type": "card_error",
@@ -316,7 +340,6 @@ def create_app() -> Flask:
                 }
             }), 400
         except stripe.error.RateLimitError as e:
-            # Too many requests made to the API too quickly
             return jsonify({
                 "error": {
                     "type": "rate_limit_error",
@@ -324,7 +347,6 @@ def create_app() -> Flask:
                 }
             }), 429
         except stripe.error.InvalidRequestError as e:
-            # Invalid parameters were supplied to Stripe's API
             return jsonify({
                 "error": {
                     "type": "invalid_request_error",
@@ -332,7 +354,6 @@ def create_app() -> Flask:
                 }
             }), 400
         except stripe.error.AuthenticationError as e:
-            # Authentication with Stripe's API failed
             return jsonify({
                 "error": {
                     "type": "authentication_error",
@@ -340,7 +361,6 @@ def create_app() -> Flask:
                 }
             }), 401
         except stripe.error.APIConnectionError as e:
-            # Network communication with Stripe failed
             return jsonify({
                 "error": {
                     "type": "api_connection_error",
@@ -348,7 +368,6 @@ def create_app() -> Flask:
                 }
             }), 502
         except stripe.error.StripeError as e:
-            # Generic Stripe error
             return jsonify({
                 "error": {
                     "type": "stripe_error",
@@ -356,11 +375,140 @@ def create_app() -> Flask:
                 }
             }), 400
         except Exception as e:
-            # Something else happened, completely unrelated to Stripe
+            import traceback
+            error_trace = traceback.format_exc()
+            app.logger.error(f"Unexpected error in create_payment_intent: {str(e)}\n{error_trace}")
+            return jsonify({
+                "error": {
+                    "message": f"Server error: {str(e)}",
+                    "type": "server_error"
+                }
+            }), 500
+
+    @app.route("/create-subscription", methods=["POST"])
+    def create_subscription():
+        """Create a Stripe Subscription after payment has succeeded.
+        
+        Expected JSON body:
+        - customerId: Customer ID
+        - priceId: Stripe Price ID (recurring)
+        - paymentIntentId: PaymentIntent ID that was successfully paid
+        - portfolios: List of selected portfolio names (optional, for metadata)
+        
+        Returns:
+        - subscriptionId: Created subscription ID
+        """
+        if not stripe.api_key:
+            return jsonify({
+                "error": {
+                    "message": "Server not configured. Set STRIPE_SECRET_KEY environment variable."
+                }
+            }), 500
+
+        # Get JSON data from request
+        try:
+            data = request.get_json(force=False, silent=True)
+            if data is None:
+                if request.is_json:
+                    data = {}
+                else:
+                    return jsonify({
+                        "error": {
+                            "message": "Invalid request. JSON body required."
+                        }
+                    }), 400
+        except Exception as e:
+            app.logger.error(f"Error parsing JSON request: {str(e)}")
+            return jsonify({
+                "error": {
+                    "message": f"Error parsing request: {str(e)}"
+                }
+            }), 400
+        
+        customer_id = data.get("customerId") if data else None
+        price_id = data.get("priceId") if data else None
+        payment_intent_id = data.get("paymentIntentId") if data else None
+        portfolios = data.get("portfolios", []) if data else []
+
+        if not customer_id or not price_id or not payment_intent_id:
+            return jsonify({
+                "error": {
+                    "message": "Missing required fields: customerId, priceId, paymentIntentId"
+                }
+            }), 400
+
+        try:
+            # Verify the PaymentIntent was successful
+            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+            if payment_intent.status != "succeeded":
+                return jsonify({
+                    "error": {
+                        "message": f"PaymentIntent {payment_intent_id} has not succeeded. Status: {payment_intent.status}"
+                    }
+                }), 400
+            
+            # Verify the customer exists
+            customer = stripe.Customer.retrieve(customer_id)
+            
+            # Get the payment method from the PaymentIntent
+            payment_method_id = payment_intent.payment_method
+            
+            # Attach the payment method to the customer for future use
+            if payment_method_id:
+                try:
+                    stripe.PaymentMethod.attach(
+                        payment_method_id,
+                        customer=customer_id
+                    )
+                    # Set as default payment method
+                    stripe.Customer.modify(
+                        customer_id,
+                        invoice_settings={
+                            "default_payment_method": payment_method_id
+                        }
+                    )
+                except Exception as e:
+                    app.logger.warning(f"Could not attach payment method: {str(e)}")
+            
+            # Validate price ID
+            price = stripe.Price.retrieve(price_id)
+            if not price.active or price.type != "recurring":
+                return jsonify({
+                    "error": {
+                        "message": f"Price {price_id} is not a valid recurring price."
+                    }
+                }), 400
+
+            # Create the subscription with the saved payment method
+            subscription = stripe.Subscription.create(
+                customer=customer_id,
+                items=[{"price": price_id}],
+                default_payment_method=payment_method_id,
+                metadata={
+                    "portfolios": ", ".join(portfolios) if portfolios else "N/A",
+                    "portfolio_count": str(len(portfolios)),
+                    "price_id": price_id,
+                    "payment_intent_id": payment_intent_id
+                }
+            )
+
+            return jsonify({
+                "subscriptionId": subscription.id,
+                "status": subscription.status,
+                "customerId": customer_id
+            })
+
+        except stripe.error.InvalidRequestError as e:
+            return jsonify({
+                "error": {
+                    "type": "invalid_request_error",
+                    "message": str(e),
+                }
+            }), 400
+        except Exception as e:
             import traceback
             error_trace = traceback.format_exc()
             app.logger.error(f"Unexpected error in create_subscription: {str(e)}\n{error_trace}")
-            # Return detailed error for debugging
             return jsonify({
                 "error": {
                     "message": f"Server error: {str(e)}",

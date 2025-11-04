@@ -44,6 +44,10 @@
       "dest": "server.py"
     },
     {
+      "src": "^/create-payment-intent$",
+      "dest": "server.py"
+    },
+    {
       "src": "^/create-subscription$",
       "dest": "server.py"
     },
