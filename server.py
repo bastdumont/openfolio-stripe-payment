@@ -116,20 +116,47 @@ def create_app() -> Flask:
                 # Invoice is already expanded
                 payment_intent = latest_invoice.payment_intent
             
+            # If payment_intent is None, the invoice might not have a payment intent yet
+            if payment_intent is None:
+                app.logger.error(f"No PaymentIntent found for subscription {subscription.id}, invoice {latest_invoice.id if hasattr(latest_invoice, 'id') else latest_invoice}")
+                return jsonify({
+                    "error": {
+                        "message": "PaymentIntent not available. Please try again."
+                    }
+                }), 500
+            
             # Handle both expanded and non-expanded PaymentIntent objects
             if isinstance(payment_intent, str):
                 # If it's just an ID, retrieve the PaymentIntent
                 payment_intent = stripe.PaymentIntent.retrieve(payment_intent)
             
+            # Ensure we have a client_secret
+            if not hasattr(payment_intent, 'client_secret') or not payment_intent.client_secret:
+                app.logger.error(f"No client_secret found for PaymentIntent {payment_intent.id}")
+                return jsonify({
+                    "error": {
+                        "message": "PaymentIntent client secret not available. Please try again."
+                    }
+                }), 500
+            
             client_secret = payment_intent.client_secret
             
             # Ensure PaymentIntent only accepts card payments (no Link)
-            if payment_intent.payment_method_types != ["card"]:
-                # Update the PaymentIntent to only allow card payments
-                stripe.PaymentIntent.modify(
-                    payment_intent.id,
-                    payment_method_types=["card"]
-                )
+            # Only modify if payment_method_types exists and is not already ["card"]
+            if hasattr(payment_intent, 'payment_method_types'):
+                current_types = payment_intent.payment_method_types
+                if current_types and "card" not in current_types:
+                    # If card is not in the list, add it
+                    stripe.PaymentIntent.modify(
+                        payment_intent.id,
+                        payment_method_types=["card"]
+                    )
+                elif current_types and len(current_types) > 1 and "card" in current_types:
+                    # If there are multiple types including card, restrict to card only
+                    stripe.PaymentIntent.modify(
+                        payment_intent.id,
+                        payment_method_types=["card"]
+                    )
 
             return jsonify({
                 "subscriptionId": subscription.id,
@@ -187,9 +214,16 @@ def create_app() -> Flask:
             }), 400
         except Exception as e:
             # Something else happened, completely unrelated to Stripe
-            app.logger.error(f"Unexpected error in create_subscription: {str(e)}")
-            # In development, return the actual error for debugging
-            return jsonify({"error": {"message": f"Debug error: {str(e)}"}}), 500
+            import traceback
+            error_trace = traceback.format_exc()
+            app.logger.error(f"Unexpected error in create_subscription: {str(e)}\n{error_trace}")
+            # Return detailed error for debugging
+            return jsonify({
+                "error": {
+                    "message": f"Server error: {str(e)}",
+                    "type": "server_error"
+                }
+            }), 500
 
     @app.route("/cancel-subscription", methods=["POST"])
     def cancel_subscription():
