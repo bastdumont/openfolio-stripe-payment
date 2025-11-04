@@ -1895,6 +1895,21 @@
           const name = document.getElementById('name').value;
 
           try {
+            // Validate price ID before submitting
+            if (!currentPriceId) {
+              throw new Error(
+                'Price ID is missing. Please refresh the page and try again.'
+              );
+            }
+
+            // Debug: Log the price ID being sent
+            console.log('🔍 Submitting payment with:', {
+              priceId: currentPriceId,
+              billing: currentBilling,
+              portfolioCount: selectedPortfolios.length,
+              portfolios: selectedPortfolios,
+            });
+
             // Step 1: Create subscription on the backend
             const response = await fetch('/create-subscription', {
               method: 'POST',

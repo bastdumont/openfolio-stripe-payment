@@ -31,12 +31,12 @@ def create_app() -> Flask:
         """Serve the general conditions page."""
         return send_from_directory('.', 'cg.html')
 
-    @app.get("/health")
-    def health() -> tuple[dict, int]:
+    @app.route("/health", methods=["GET"])
+    def health():
         """Basic health check endpoint."""
-        return {"status": "ok", "stripe_configured": bool(stripe.api_key)}, 200
+        return jsonify({"status": "ok", "stripe_configured": bool(stripe.api_key)}), 200
 
-    @app.post("/create-subscription")
+    @app.route("/create-subscription", methods=["POST"])
     def create_subscription():
         """Create a Stripe Subscription and return the PaymentIntent client secret.
 
@@ -191,7 +191,7 @@ def create_app() -> Flask:
             # In development, return the actual error for debugging
             return jsonify({"error": {"message": f"Debug error: {str(e)}"}}), 500
 
-    @app.post("/cancel-subscription")
+    @app.route("/cancel-subscription", methods=["POST"])
     def cancel_subscription():
         """Cancel a Stripe subscription.
         
@@ -240,7 +240,7 @@ def create_app() -> Flask:
             app.logger.error(f"Unexpected error in cancel_subscription: {str(e)}")
             return jsonify({"error": {"message": "An unexpected error occurred."}}), 500
 
-    @app.get("/list-subscriptions")
+    @app.route("/list-subscriptions", methods=["GET"])
     def list_subscriptions():
         """List all subscriptions for a customer (optional)."""
         if not stripe.api_key:
