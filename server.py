@@ -67,6 +67,38 @@ def create_app() -> Flask:
             }), 400
 
         try:
+            # Validate price ID exists and is accessible with current API key mode
+            try:
+                price = stripe.Price.retrieve(price_id)
+                if not price.active:
+                    return jsonify({
+                        "error": {
+                            "message": f"Price {price_id} is not active. Please contact support."
+                        }
+                    }), 400
+                if price.type != "recurring":
+                    return jsonify({
+                        "error": {
+                            "message": f"Price {price_id} is not a recurring price. Subscriptions require recurring prices."
+                        }
+                    }), 400
+            except stripe.error.InvalidRequestError as e:
+                # Price doesn't exist or wrong mode (test vs live mismatch)
+                app.logger.error(f"Price retrieval failed: {str(e)}")
+                is_test_key = stripe.api_key.startswith('sk_test_')
+                is_live_price = price_id.startswith('price_1') and len(price_id) > 20
+                error_msg = f"Price ID {price_id} not found or not accessible."
+                if is_test_key and is_live_price:
+                    error_msg += " You're using a TEST API key but a LIVE price ID. Use test price IDs or switch to live API key."
+                elif not is_test_key and not is_live_price:
+                    error_msg += " You're using a LIVE API key but possibly a test price ID. Use live price IDs."
+                return jsonify({
+                    "error": {
+                        "message": error_msg,
+                        "type": "invalid_request_error"
+                    }
+                }), 400
+            
             # Check if a customer with this email already exists
             existing_customers = stripe.Customer.list(email=email, limit=1)
             

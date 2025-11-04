@@ -40,12 +40,8 @@
       "dest": "/cg.html"
     },
     {
-      "src": "^/open_folio_multilingual_landing_fr_de_en_with_i_18_n$",
-      "dest": "/open_folio_multilingual_landing_fr_de_en_with_i_18_n.html"
-    },
-    {
-      "src": "^/stripe_payment_page$",
-      "dest": "/stripe_payment_page.html"
+      "src": "^/health$",
+      "dest": "server.py"
     },
     {
       "src": "^/create-subscription$",
