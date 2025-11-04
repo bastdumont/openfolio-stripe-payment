@@ -453,24 +453,59 @@ def create_app() -> Flask:
             # Get the payment method from the PaymentIntent
             payment_method_id = payment_intent.payment_method
             
-            # Attach the payment method to the customer for future use
-            if payment_method_id:
-                try:
-                    stripe.PaymentMethod.attach(
-                        payment_method_id,
-                        customer=customer_id
-                    )
-                    # Set as default payment method
-                    stripe.Customer.modify(
-                        customer_id,
-                        invoice_settings={
-                            "default_payment_method": payment_method_id
-                        }
-                    )
-                except Exception as e:
-                    app.logger.warning(f"Could not attach payment method: {str(e)}")
+            if not payment_method_id:
+                return jsonify({
+                    "error": {
+                        "message": "PaymentIntent does not have a payment method attached."
+                    }
+                }), 400
             
-            # Validate price ID
+            # Step 1: Attach payment method to customer FIRST (must be done before subscription creation)
+            try:
+                # Check if payment method is already attached
+                try:
+                    pm = stripe.PaymentMethod.retrieve(payment_method_id)
+                    if not pm.customer:
+                        # Not attached, attach it
+                        stripe.PaymentMethod.attach(
+                            payment_method_id,
+                            customer=customer_id
+                        )
+                        app.logger.info(f"Attached payment method {payment_method_id} to customer {customer_id}")
+                    else:
+                        app.logger.info(f"Payment method {payment_method_id} already attached to customer {pm.customer}")
+                except stripe.error.InvalidRequestError as e:
+                    # Payment method might not exist or be in a different state
+                    app.logger.error(f"Error retrieving payment method: {str(e)}")
+                    # Try to attach anyway
+                    try:
+                        stripe.PaymentMethod.attach(
+                            payment_method_id,
+                            customer=customer_id
+                        )
+                        app.logger.info(f"Attached payment method {payment_method_id} to customer {customer_id} after error")
+                    except Exception as attach_error:
+                        app.logger.error(f"Failed to attach payment method: {str(attach_error)}")
+                        raise
+                
+                # Step 2: Set as default payment method on customer (for future invoices)
+                stripe.Customer.modify(
+                    customer_id,
+                    invoice_settings={
+                        "default_payment_method": payment_method_id
+                    }
+                )
+                app.logger.info(f"Set payment method {payment_method_id} as default for customer {customer_id}")
+                
+            except Exception as e:
+                app.logger.error(f"Error setting up payment method: {str(e)}")
+                return jsonify({
+                    "error": {
+                        "message": f"Failed to set up payment method: {str(e)}"
+                    }
+                }), 400
+            
+            # Step 3: Validate price ID
             price = stripe.Price.retrieve(price_id)
             if not price.active or price.type != "recurring":
                 return jsonify({
@@ -479,18 +514,73 @@ def create_app() -> Flask:
                     }
                 }), 400
 
-            # Create the subscription with the saved payment method
+            # Step 4: Create the subscription with the saved payment method
+            # According to Stripe docs: https://docs.stripe.com/billing/subscriptions/overview#subscription-lifecycle
+            # The payment method must be attached BEFORE creating the subscription
+            # We create the subscription which will automatically create an invoice
             subscription = stripe.Subscription.create(
                 customer=customer_id,
                 items=[{"price": price_id}],
                 default_payment_method=payment_method_id,
+                payment_settings={
+                    "save_default_payment_method": "on_subscription"
+                },
+                # Since we already collected payment via PaymentIntent, we can set payment_behavior
+                # to allow incomplete, then we'll pay the invoice manually
+                payment_behavior="allow_incomplete",
                 metadata={
                     "portfolios": ", ".join(portfolios) if portfolios else "N/A",
                     "portfolio_count": str(len(portfolios)),
                     "price_id": price_id,
                     "payment_intent_id": payment_intent_id
-                }
+                },
+                expand=["latest_invoice"]
             )
+            
+            app.logger.info(f"Created subscription {subscription.id} with payment method {payment_method_id} for customer {customer_id}, status: {subscription.status}")
+            
+            # Step 5: Pay the subscription's initial invoice using the already-succeeded payment
+            # The PaymentIntent already succeeded, so we need to mark the subscription invoice as paid
+            # or pay it with the saved payment method
+            if subscription.latest_invoice:
+                invoice = subscription.latest_invoice
+                if isinstance(invoice, str):
+                    invoice = stripe.Invoice.retrieve(invoice, expand=["payment_intent"])
+                
+                # If invoice is open/unpaid, pay it with the saved payment method
+                if invoice.status == "open" or invoice.status == "draft":
+                    try:
+                        # Finalize draft invoice if needed
+                        if invoice.status == "draft":
+                            invoice = stripe.Invoice.finalize_invoice(invoice.id)
+                            app.logger.info(f"Finalized invoice {invoice.id}")
+                        
+                        # Pay the invoice using the saved payment method
+                        paid_invoice = stripe.Invoice.pay(
+                            invoice.id,
+                            payment_method=payment_method_id
+                        )
+                        app.logger.info(f"Paid invoice {paid_invoice.id} for subscription {subscription.id}")
+                        
+                        # Refresh subscription to get updated status
+                        subscription = stripe.Subscription.retrieve(subscription.id)
+                        app.logger.info(f"Subscription {subscription.id} status after invoice payment: {subscription.status}")
+                    except Exception as e:
+                        app.logger.error(f"Error paying invoice: {str(e)}")
+                        # Don't fail the request, but log the error
+                        # The subscription might still work if Stripe handles it automatically
+            
+            # Verify subscription has the payment method set correctly
+            if subscription.default_payment_method != payment_method_id:
+                app.logger.warning(f"Subscription {subscription.id} default_payment_method is {subscription.default_payment_method}, expected {payment_method_id}")
+                try:
+                    subscription = stripe.Subscription.modify(
+                        subscription.id,
+                        default_payment_method=payment_method_id
+                    )
+                    app.logger.info(f"Updated subscription {subscription.id} default_payment_method to {payment_method_id}")
+                except Exception as e:
+                    app.logger.error(f"Failed to update subscription default_payment_method: {str(e)}")
 
             return jsonify({
                 "subscriptionId": subscription.id,
