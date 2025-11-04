@@ -4,22 +4,6 @@
     {
       "src": "server.py",
       "use": "@vercel/python"
-    },
-    {
-      "src": "open_folio_multilingual_landing_fr_de_en_with_i_18_n.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "stripe_payment_page.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "privacy.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "cg.html",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
