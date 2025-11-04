@@ -85,37 +85,51 @@ def create_app() -> Flask:
                     }
                 )
 
-            # First, get the price to calculate the amount
-            price = stripe.Price.retrieve(price_id)
-            
-            # Create a payment intent for the subscription
-            # Create a card-only PaymentIntent to avoid showing Link or other methods automatically
-            payment_intent = stripe.PaymentIntent.create(
-                amount=price.unit_amount,
-                currency=price.currency,
+            # Create the subscription in incomplete state
+            # Stripe automatically creates a PaymentIntent for the subscription's invoice
+            # when using payment_behavior="default_incomplete"
+            subscription = stripe.Subscription.create(
                 customer=customer.id,
-                payment_method_types=["card"],  # ensure only card (used by Apple Pay / Google Pay tokenized as card)
+                items=[{"price": price_id}],
+                payment_behavior="default_incomplete",
+                payment_settings={
+                    "save_default_payment_method": "on_subscription"
+                },
+                expand=["latest_invoice.payment_intent"],  # Expand to get PaymentIntent details
                 metadata={
                     "portfolios": ", ".join(portfolios) if portfolios else "N/A",
                     "portfolio_count": str(len(portfolios)),
                     "price_id": price_id
                 }
             )
-            
-            # Create the subscription in incomplete state
-            subscription = stripe.Subscription.create(
-                customer=customer.id,
-                items=[{"price": price_id}],
-                payment_behavior="default_incomplete",
-                payment_settings={"save_default_payment_method": "on_subscription"},
-                metadata={
-                    "portfolios": ", ".join(portfolios) if portfolios else "N/A",
-                    "portfolio_count": str(len(portfolios)),
-                    "payment_intent_id": payment_intent.id
-                }
-            )
 
+            # Get the client_secret from the subscription's PaymentIntent
+            # The PaymentIntent is automatically created by Stripe for the invoice
+            latest_invoice = subscription.latest_invoice
+            
+            # Handle both expanded and non-expanded invoice objects
+            if isinstance(latest_invoice, str):
+                # If it's just an ID, retrieve the invoice with PaymentIntent expanded
+                invoice = stripe.Invoice.retrieve(latest_invoice, expand=["payment_intent"])
+                payment_intent = invoice.payment_intent
+            else:
+                # Invoice is already expanded
+                payment_intent = latest_invoice.payment_intent
+            
+            # Handle both expanded and non-expanded PaymentIntent objects
+            if isinstance(payment_intent, str):
+                # If it's just an ID, retrieve the PaymentIntent
+                payment_intent = stripe.PaymentIntent.retrieve(payment_intent)
+            
             client_secret = payment_intent.client_secret
+            
+            # Ensure PaymentIntent only accepts card payments (no Link)
+            if payment_intent.payment_method_types != ["card"]:
+                # Update the PaymentIntent to only allow card payments
+                stripe.PaymentIntent.modify(
+                    payment_intent.id,
+                    payment_method_types=["card"]
+                )
 
             return jsonify({
                 "subscriptionId": subscription.id,

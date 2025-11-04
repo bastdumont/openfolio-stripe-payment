@@ -1484,8 +1484,8 @@
 
       // Initialize Stripe - You need to replace this with your own publishable key
       const STRIPE_PUBLISHABLE_KEY =
-        // 'pk_test_51RUOnNQEcoJQ0jjtGrI6uKMqjFtwsoMlKCOvsnxlOFKe0Llopj6kUyIXgfebzEiBrqDEGSPuKIrJKy9FL8UOIKyl006Q28P2r6';
         'pk_live_51RUOnFGCDHpNGbpgmY9ImiwaGo15forZmS4r3LamRfyslPj5Sab1qEXdPo3ZDksdWTFpcUeMmeXtcCFs6oTabL2W006kCNeUCQ';
+      // 'pk_test_51RUOnNQEcoJQ0jjtGrI6uKMqjFtwsoMlKCOvsnxlOFKe0Llopj6kUyIXgfebzEiBrqDEGSPuKIrJKy9FL8UOIKyl006Q28P2r6';
 
       if (STRIPE_PUBLISHABLE_KEY === 'pk_test_YOUR_PUBLISHABLE_KEY_HERE') {
         document.body.innerHTML = `
@@ -1900,6 +1900,7 @@
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                Accept: 'application/json',
               },
               body: JSON.stringify({
                 email: email,
@@ -1909,10 +1910,25 @@
               }),
             });
 
-            const result = await response.json();
+            // Ensure we received JSON; if not, surface the raw HTML/text error.
+            const contentType = response.headers.get('content-type') || '';
+            let result;
+            if (contentType.includes('application/json')) {
+              result = await response.json();
+            } else {
+              const text = await response.text();
+              throw new Error(
+                `Unexpected server response (not JSON). Status ${
+                  response.status
+                }. ${text.substring(0, 200)}`
+              );
+            }
 
-            if (result.error) {
-              throw new Error(result.error.message);
+            if (!response.ok) {
+              throw new Error(
+                (result && result.error && result.error.message) ||
+                  `Request failed with status ${response.status}`
+              );
             }
 
             // Step 2: Confirm payment with the client secret

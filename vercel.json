@@ -48,6 +48,18 @@
       "dest": "/stripe_payment_page.html"
     },
     {
+      "src": "^/create-subscription$",
+      "dest": "server.py"
+    },
+    {
+      "src": "^/cancel-subscription$",
+      "dest": "server.py"
+    },
+    {
+      "src": "^/list-subscriptions$",
+      "dest": "server.py"
+    },
+    {
       "src": "/(.*)",
       "dest": "server.py"
     }
