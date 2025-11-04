@@ -21,6 +21,8 @@ def create_app() -> Flask:
         """Ensure error responses are JSON for API endpoints."""
         # Only modify responses for API routes
         if request.path.startswith('/create-subscription') or \
+           request.path.startswith('/create-payment-intent') or \
+           request.path.startswith('/verify-subscription') or \
            request.path.startswith('/cancel-subscription') or \
            request.path.startswith('/list-subscriptions'):
             # If response is an error and not already JSON, convert it
@@ -179,10 +181,16 @@ def create_app() -> Flask:
             app.logger.error(f"Error creating price: {str(e)}")
             raise
 
-    @app.route("/create-payment-intent", methods=["POST"])
-    def create_payment_intent():
-        """Create a PaymentIntent for the selected price. Subscription will be created after payment succeeds.
-
+    @app.route("/create-subscription-incomplete", methods=["POST"])
+    def create_subscription_incomplete():
+        """Create a subscription with incomplete status. PaymentIntent will be created automatically by Stripe.
+        
+        This follows Stripe's recommended flow to avoid double charging:
+        1. Create subscription with payment_behavior=default_incomplete
+        2. Stripe automatically creates PaymentIntent for the first invoice
+        3. Confirm that PaymentIntent on frontend
+        4. Subscription becomes active after payment succeeds
+        
         Expected JSON body:
         - email: Customer email
         - name: Customer full name
@@ -192,9 +200,11 @@ def create_app() -> Flask:
         - billingPeriod: 'biannual' or 'annual' - used if priceId not provided
         
         Returns:
-        - clientSecret: PaymentIntent client secret for frontend confirmation
+        - clientSecret: PaymentIntent client secret from subscription's first invoice
         - customerId: Customer ID (created or existing)
         - priceId: The price ID used
+        - subscriptionId: Subscription ID (status will be 'incomplete' until payment)
+        - paymentIntentId: PaymentIntent ID to confirm
         """
         if not stripe.api_key:
             return jsonify({
@@ -309,27 +319,60 @@ def create_app() -> Flask:
                     }
                 )
 
-            # Create a PaymentIntent for the subscription amount
-            # This will be used to collect payment, then we'll create the subscription
-            payment_intent = stripe.PaymentIntent.create(
-                amount=price.unit_amount,  # Amount in cents
-                currency=price.currency,
+            # Create subscription with payment_behavior=default_incomplete
+            # This is Stripe's recommended approach to avoid double charging
+            # Stripe will automatically create a PaymentIntent for the first invoice
+            subscription = stripe.Subscription.create(
                 customer=customer.id,
-                payment_method_types=["card"],  # Only card payments
+                items=[{"price": price_id}],
+                payment_behavior="default_incomplete",  # Creates PaymentIntent automatically
+                collection_method="charge_automatically",  # Force card payment, not invoice payment
+                payment_settings={
+                    "save_default_payment_method": "on_subscription"
+                },
                 metadata={
-                    "price_id": price_id,
                     "portfolios": ", ".join(portfolios) if portfolios else "N/A",
                     "portfolio_count": str(len(portfolios)),
-                    "subscription_pending": "true"  # Flag to indicate subscription will be created after payment
+                    "price_id": price_id
                 },
-                description=f"OpenFolio Subscription - {', '.join(portfolios) if portfolios else 'All portfolios'}"
+                expand=["latest_invoice.payment_intent"]
             )
+            
+            app.logger.info(f"Created subscription {subscription.id} with incomplete status for customer {customer.id}")
+            
+            # Extract PaymentIntent from the subscription's first invoice
+            invoice = subscription.latest_invoice
+            if isinstance(invoice, str):
+                invoice = stripe.Invoice.retrieve(invoice, expand=["payment_intent"])
+            
+            payment_intent_id = None
+            client_secret = None
+            
+            # Get PaymentIntent from invoice
+            if invoice.payment_intent:
+                if isinstance(invoice.payment_intent, str):
+                    payment_intent_id = invoice.payment_intent
+                    # Retrieve PaymentIntent to get client_secret
+                    payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+                    client_secret = payment_intent.client_secret
+                else:
+                    # PaymentIntent is already expanded
+                    payment_intent_id = invoice.payment_intent.id
+                    client_secret = invoice.payment_intent.client_secret
+            
+            if not client_secret or not payment_intent_id:
+                return jsonify({
+                    "error": {
+                        "message": "Failed to create PaymentIntent for subscription. Please try again."
+                    }
+                }), 500
 
             return jsonify({
-                "clientSecret": payment_intent.client_secret,
+                "clientSecret": client_secret,
                 "customerId": customer.id,
                 "priceId": price_id,
-                "paymentIntentId": payment_intent.id
+                "subscriptionId": subscription.id,
+                "paymentIntentId": payment_intent_id
             })
 
         except stripe.error.CardError as e:
@@ -385,18 +428,21 @@ def create_app() -> Flask:
                 }
             }), 500
 
-    @app.route("/create-subscription", methods=["POST"])
-    def create_subscription():
-        """Create a Stripe Subscription after payment has succeeded.
+    @app.route("/verify-subscription", methods=["POST"])
+    def verify_subscription():
+        """Verify that a subscription's payment was successful and subscription is active.
+        
+        This endpoint is called after the PaymentIntent is confirmed on the frontend.
+        It verifies the subscription status and returns the final subscription details.
         
         Expected JSON body:
-        - customerId: Customer ID
-        - priceId: Stripe Price ID (recurring)
-        - paymentIntentId: PaymentIntent ID that was successfully paid
-        - portfolios: List of selected portfolio names (optional, for metadata)
+        - subscriptionId: Subscription ID to verify
+        - paymentIntentId: PaymentIntent ID that was confirmed (optional, for verification)
         
         Returns:
-        - subscriptionId: Created subscription ID
+        - subscriptionId: Subscription ID
+        - status: Subscription status (should be 'active' if payment succeeded)
+        - customerId: Customer ID
         """
         if not stripe.api_key:
             return jsonify({
@@ -425,156 +471,44 @@ def create_app() -> Flask:
                 }
             }), 400
         
-        customer_id = data.get("customerId") if data else None
-        price_id = data.get("priceId") if data else None
+        subscription_id = data.get("subscriptionId") if data else None
         payment_intent_id = data.get("paymentIntentId") if data else None
-        portfolios = data.get("portfolios", []) if data else []
 
-        if not customer_id or not price_id or not payment_intent_id:
+        if not subscription_id:
             return jsonify({
                 "error": {
-                    "message": "Missing required fields: customerId, priceId, paymentIntentId"
+                    "message": "Missing required field: subscriptionId"
                 }
             }), 400
 
         try:
-            # Verify the PaymentIntent was successful
-            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
-            if payment_intent.status != "succeeded":
-                return jsonify({
-                    "error": {
-                        "message": f"PaymentIntent {payment_intent_id} has not succeeded. Status: {payment_intent.status}"
-                    }
-                }), 400
+            # Retrieve the subscription
+            subscription = stripe.Subscription.retrieve(subscription_id, expand=["latest_invoice.payment_intent"])
             
-            # Verify the customer exists
-            customer = stripe.Customer.retrieve(customer_id)
+            # Verify payment if PaymentIntent ID provided
+            if payment_intent_id:
+                payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+                if payment_intent.status != "succeeded":
+                    return jsonify({
+                        "error": {
+                            "message": f"PaymentIntent {payment_intent_id} has not succeeded. Status: {payment_intent.status}"
+                        }
+                    }), 400
             
-            # Get the payment method from the PaymentIntent
-            payment_method_id = payment_intent.payment_method
-            
-            if not payment_method_id:
-                return jsonify({
-                    "error": {
-                        "message": "PaymentIntent does not have a payment method attached."
-                    }
-                }), 400
-            
-            # Step 1: Attach payment method to customer FIRST (must be done before subscription creation)
-            try:
-                # Check if payment method is already attached
-                try:
-                    pm = stripe.PaymentMethod.retrieve(payment_method_id)
-                    if not pm.customer:
-                        # Not attached, attach it
-                        stripe.PaymentMethod.attach(
-                            payment_method_id,
-                            customer=customer_id
-                        )
-                        app.logger.info(f"Attached payment method {payment_method_id} to customer {customer_id}")
-                    else:
-                        app.logger.info(f"Payment method {payment_method_id} already attached to customer {pm.customer}")
-                except stripe.error.InvalidRequestError as e:
-                    # Payment method might not exist or be in a different state
-                    app.logger.error(f"Error retrieving payment method: {str(e)}")
-                    # Try to attach anyway
-                    try:
-                        stripe.PaymentMethod.attach(
-                            payment_method_id,
-                            customer=customer_id
-                        )
-                        app.logger.info(f"Attached payment method {payment_method_id} to customer {customer_id} after error")
-                    except Exception as attach_error:
-                        app.logger.error(f"Failed to attach payment method: {str(attach_error)}")
-                        raise
-                
-                # Step 2: Set as default payment method on customer (for future invoices)
-                stripe.Customer.modify(
-                    customer_id,
-                    invoice_settings={
-                        "default_payment_method": payment_method_id
-                    }
-                )
-                app.logger.info(f"Set payment method {payment_method_id} as default for customer {customer_id}")
-                
-            except Exception as e:
-                app.logger.error(f"Error setting up payment method: {str(e)}")
-                return jsonify({
-                    "error": {
-                        "message": f"Failed to set up payment method: {str(e)}"
-                    }
-                }), 400
-            
-            # Step 3: Validate price ID
-            price = stripe.Price.retrieve(price_id)
-            if not price.active or price.type != "recurring":
-                return jsonify({
-                    "error": {
-                        "message": f"Price {price_id} is not a valid recurring price."
-                    }
-                }), 400
-
-            # Step 4: Create the subscription with the saved payment method
-            # According to Stripe docs: https://docs.stripe.com/billing/subscriptions/overview#subscription-lifecycle
-            # The payment method must be attached BEFORE creating the subscription
-            # We set collection_method="charge_automatically" to ensure card payment, not invoice payment
-            subscription = stripe.Subscription.create(
-                customer=customer_id,
-                items=[{"price": price_id}],
-                default_payment_method=payment_method_id,
-                collection_method="charge_automatically",  # Force card payment, not invoice payment
-                payment_settings={
-                    "save_default_payment_method": "on_subscription"
-                },
-                # Since payment already succeeded via PaymentIntent, Stripe will automatically
-                # charge the initial invoice with the saved payment method
-                metadata={
-                    "portfolios": ", ".join(portfolios) if portfolios else "N/A",
-                    "portfolio_count": str(len(portfolios)),
-                    "price_id": price_id,
-                    "payment_intent_id": payment_intent_id
-                },
-                expand=["latest_invoice.payment_intent"]
-            )
-            
-            app.logger.info(f"Created subscription {subscription.id} with payment method {payment_method_id} for customer {customer_id}, status: {subscription.status}")
-            
-            # Step 5: Verify the subscription invoice is automatically charged
-            # With collection_method="charge_automatically" and default_payment_method set,
-            # Stripe should automatically charge the invoice. We just verify it worked.
-            if subscription.latest_invoice:
-                invoice = subscription.latest_invoice
-                if isinstance(invoice, str):
-                    invoice = stripe.Invoice.retrieve(invoice, expand=["payment_intent"])
-                
-                # Check invoice status
-                if invoice.status == "paid":
-                    app.logger.info(f"Invoice {invoice.id} automatically paid for subscription {subscription.id}")
-                elif invoice.status == "open":
-                    # Invoice is open but should be paid automatically
-                    # This might happen if payment is processing
-                    app.logger.info(f"Invoice {invoice.id} is open for subscription {subscription.id}, payment may be processing")
-                    # Refresh subscription to check updated status
-                    subscription = stripe.Subscription.retrieve(subscription.id)
-                else:
-                    app.logger.warning(f"Invoice {invoice.id} status is {invoice.status} for subscription {subscription.id}")
-            
-            # Verify subscription has the payment method set correctly
-            if subscription.default_payment_method != payment_method_id:
-                app.logger.warning(f"Subscription {subscription.id} default_payment_method is {subscription.default_payment_method}, expected {payment_method_id}")
-                try:
-                    subscription = stripe.Subscription.modify(
-                        subscription.id,
-                        default_payment_method=payment_method_id
-                    )
-                    app.logger.info(f"Updated subscription {subscription.id} default_payment_method to {payment_method_id}")
-                except Exception as e:
-                    app.logger.error(f"Failed to update subscription default_payment_method: {str(e)}")
+            # Check subscription status
+            if subscription.status == "active":
+                app.logger.info(f"Subscription {subscription_id} is active after payment")
+            elif subscription.status == "incomplete":
+                # Payment might still be processing
+                app.logger.info(f"Subscription {subscription_id} is still incomplete, payment may be processing")
+            else:
+                app.logger.warning(f"Subscription {subscription_id} has unexpected status: {subscription.status}")
 
             return jsonify({
                 "subscriptionId": subscription.id,
                 "status": subscription.status,
-                "customerId": customer_id
+                "customerId": subscription.customer,
+                "defaultPaymentMethod": subscription.default_payment_method
             })
 
         except stripe.error.InvalidRequestError as e:
@@ -587,7 +521,7 @@ def create_app() -> Flask:
         except Exception as e:
             import traceback
             error_trace = traceback.format_exc()
-            app.logger.error(f"Unexpected error in create_subscription: {str(e)}\n{error_trace}")
+            app.logger.error(f"Unexpected error in verify_subscription: {str(e)}\n{error_trace}")
             return jsonify({
                 "error": {
                     "message": f"Server error: {str(e)}",

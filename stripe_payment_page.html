@@ -1580,9 +1580,9 @@
             paymentRequest.on('paymentmethod', async (ev) => {
               const resultDiv = document.getElementById('payment-result');
               try {
-                // Step 1: Create PaymentIntent server-side
-                const paymentIntentResponse = await fetch(
-                  '/create-payment-intent',
+                // Step 1: Create subscription with incomplete status (Stripe's recommended flow)
+                const subscriptionResponse = await fetch(
+                  '/create-subscription-incomplete',
                   {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1597,15 +1597,15 @@
                     }),
                   }
                 );
-                const paymentIntentData = await paymentIntentResponse.json();
-                if (paymentIntentData.error) {
-                  throw new Error(paymentIntentData.error.message);
+                const subscriptionData = await subscriptionResponse.json();
+                if (subscriptionData.error) {
+                  throw new Error(subscriptionData.error.message);
                 }
 
                 // Step 2: Confirm with the wallet payment method
                 const { error: confirmError, paymentIntent } =
                   await stripe.confirmCardPayment(
-                    paymentIntentData.clientSecret,
+                    subscriptionData.clientSecret,
                     { payment_method: ev.paymentMethod.id },
                     { handleActions: false }
                   );
@@ -1619,24 +1619,19 @@
                 ) {
                   ev.complete('success');
 
-                  // Step 3: Create subscription after payment succeeds
-                  const subscriptionResponse = await fetch(
-                    '/create-subscription',
-                    {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        customerId: paymentIntentData.customerId,
-                        priceId: paymentIntentData.priceId,
-                        paymentIntentId: paymentIntentData.paymentIntentId,
-                        portfolios: selectedPortfolios,
-                      }),
-                    }
-                  );
-                  const subscriptionData = await subscriptionResponse.json();
+                  // Step 3: Verify subscription is active after payment succeeds
+                  const verifyResponse = await fetch('/verify-subscription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      subscriptionId: subscriptionData.subscriptionId,
+                      paymentIntentId: subscriptionData.paymentIntentId,
+                    }),
+                  });
+                  const verifyResult = await verifyResponse.json();
 
-                  if (subscriptionData.error) {
-                    resultDiv.innerHTML = `<div class="error-message">${subscriptionData.error.message}</div>`;
+                  if (verifyResult.error) {
+                    resultDiv.innerHTML = `<div class="error-message">${verifyResult.error.message}</div>`;
                   } else {
                     const finalPricing = calculatePrice(
                       selectedPortfolios.length,
@@ -1655,7 +1650,12 @@
                           2
                         )} CHF<br>
                         <strong>Subscription ID:</strong> ${
-                          subscriptionData.subscriptionId
+                          verifyResult.subscriptionId
+                        }<br>
+                        <strong>Status:</strong> ${
+                          verifyResult.status === 'active'
+                            ? '✅ Actif'
+                            : verifyResult.status
                         }
                       </div>`;
                   }
@@ -1941,9 +1941,10 @@
               portfolios: selectedPortfolios,
             });
 
-            // Step 1: Create PaymentIntent on the backend
-            const paymentIntentResponse = await fetch(
-              '/create-payment-intent',
+            // Step 1: Create subscription with incomplete status (Stripe's recommended flow)
+            // This creates the subscription and PaymentIntent automatically, avoiding double charges
+            const subscriptionResponse = await fetch(
+              '/create-subscription-incomplete',
               {
                 method: 'POST',
                 headers: {
@@ -1962,32 +1963,33 @@
 
             // Ensure we received JSON; if not, surface the raw HTML/text error.
             const contentType =
-              paymentIntentResponse.headers.get('content-type') || '';
-            let paymentIntentResult;
+              subscriptionResponse.headers.get('content-type') || '';
+            let subscriptionData;
             if (contentType.includes('application/json')) {
-              paymentIntentResult = await paymentIntentResponse.json();
+              subscriptionData = await subscriptionResponse.json();
             } else {
-              const text = await paymentIntentResponse.text();
+              const text = await subscriptionResponse.text();
               throw new Error(
                 `Unexpected server response (not JSON). Status ${
-                  paymentIntentResponse.status
+                  subscriptionResponse.status
                 }. ${text.substring(0, 200)}`
               );
             }
 
-            if (!paymentIntentResponse.ok) {
+            if (!subscriptionResponse.ok) {
               throw new Error(
-                (paymentIntentResult &&
-                  paymentIntentResult.error &&
-                  paymentIntentResult.error.message) ||
-                  `Request failed with status ${paymentIntentResponse.status}`
+                (subscriptionData &&
+                  subscriptionData.error &&
+                  subscriptionData.error.message) ||
+                  `Request failed with status ${subscriptionResponse.status}`
               );
             }
 
-            // Step 2: Confirm payment with the client secret
+            // Step 2: Confirm payment with the PaymentIntent client secret
+            // Stripe automatically created this PaymentIntent as part of the subscription
             const { error: stripeError, paymentIntent } =
               await stripe.confirmCardPayment(
-                paymentIntentResult.clientSecret,
+                subscriptionData.clientSecret,
                 {
                   payment_method: {
                     card: cardElement,
@@ -2007,44 +2009,39 @@
             } else {
               // Check payment intent status
               if (paymentIntent && paymentIntent.status === 'succeeded') {
-                // Step 3: Create subscription after payment succeeds
-                const subscriptionResponse = await fetch(
-                  '/create-subscription',
-                  {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      Accept: 'application/json',
-                    },
-                    body: JSON.stringify({
-                      customerId: paymentIntentResult.customerId,
-                      priceId: paymentIntentResult.priceId,
-                      paymentIntentId: paymentIntentResult.paymentIntentId,
-                      portfolios: selectedPortfolios,
-                    }),
-                  }
-                );
+                // Step 3: Verify subscription is active after payment succeeds
+                const verifyResponse = await fetch('/verify-subscription', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                  },
+                  body: JSON.stringify({
+                    subscriptionId: subscriptionData.subscriptionId,
+                    paymentIntentId: subscriptionData.paymentIntentId,
+                  }),
+                });
 
-                const subscriptionContentType =
-                  subscriptionResponse.headers.get('content-type') || '';
-                let subscriptionResult;
-                if (subscriptionContentType.includes('application/json')) {
-                  subscriptionResult = await subscriptionResponse.json();
+                const verifyContentType =
+                  verifyResponse.headers.get('content-type') || '';
+                let verifyResult;
+                if (verifyContentType.includes('application/json')) {
+                  verifyResult = await verifyResponse.json();
                 } else {
-                  const subscriptionText = await subscriptionResponse.text();
+                  const verifyText = await verifyResponse.text();
                   throw new Error(
-                    `Subscription creation failed. Status ${
-                      subscriptionResponse.status
-                    }. ${subscriptionText.substring(0, 200)}`
+                    `Subscription verification failed. Status ${
+                      verifyResponse.status
+                    }. ${verifyText.substring(0, 200)}`
                   );
                 }
 
-                if (!subscriptionResponse.ok) {
+                if (!verifyResponse.ok) {
                   throw new Error(
-                    (subscriptionResult &&
-                      subscriptionResult.error &&
-                      subscriptionResult.error.message) ||
-                      `Subscription creation failed with status ${subscriptionResponse.status}`
+                    (verifyResult &&
+                      verifyResult.error &&
+                      verifyResult.error.message) ||
+                      `Subscription verification failed with status ${verifyResponse.status}`
                   );
                 }
 
@@ -2063,9 +2060,13 @@
                       }<br>
                       <strong>Prix:</strong> ${pricing.total.toFixed(2)} CHF<br>
                       <strong>Subscription ID:</strong> ${
-                        subscriptionResult.subscriptionId
+                        verifyResult.subscriptionId
                       }<br>
-                      <strong>Payment Intent:</strong> ${paymentIntent.id}<br>
+                      <strong>Status:</strong> ${
+                        verifyResult.status === 'active'
+                          ? '✅ Actif'
+                          : verifyResult.status
+                      }<br>
                       <br>
                       <strong>Votre abonnement est maintenant actif!</strong>
                   </div>

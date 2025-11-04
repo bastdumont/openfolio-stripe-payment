@@ -48,7 +48,15 @@
       "dest": "server.py"
     },
     {
+      "src": "^/create-subscription-incomplete$",
+      "dest": "server.py"
+    },
+    {
       "src": "^/create-subscription$",
+      "dest": "server.py"
+    },
+    {
+      "src": "^/verify-subscription$",
       "dest": "server.py"
     },
     {
