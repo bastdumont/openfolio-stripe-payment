@@ -1799,43 +1799,20 @@
           });
         });
 
-        // Navigation buttons
-        document
-          .getElementById('continue-btn')
-          .addEventListener('click', () => {
-            goToStep(2);
-          });
+        // Single-step flow: no navigation buttons
 
-        document.getElementById('back-btn').addEventListener('click', () => {
-          goToStep(1);
-        });
-
-        // Payment form
-        const form = document.getElementById('payment-form');
+        // Trigger Checkout from step 1
         const submitButton = document.getElementById('submit-button');
-        const buttonText = document.getElementById('button-text');
-        const resultDiv = document.getElementById('payment-result');
-
-        form.addEventListener('submit', async (event) => {
-          event.preventDefault();
-
-          // Désactiver le bouton et afficher le chargement
-          submitButton.disabled = true;
-          buttonText.innerHTML = '<span class="loading"></span>Traitement...';
-
-          // Récupérer les données du formulaire
+        submitButton.addEventListener('click', async () => {
+          if (selectedPortfolios.length === 0) return;
           const email = document.getElementById('email').value;
           const name = document.getElementById('name').value;
+          if (!email || !name) return;
+
+          submitButton.disabled = true;
+          submitButton.innerHTML = '<span class="loading"></span>Traitement...';
 
           try {
-            // Debug: Log the data being sent
-            console.log('🔍 Creating checkout session with:', {
-              billing: currentBilling,
-              portfolioCount: selectedPortfolios.length,
-              portfolios: selectedPortfolios,
-            });
-
-            // Create Stripe Checkout Session - this will redirect to invoice page
             const checkoutResponse = await fetch('/create-checkout-session', {
               method: 'POST',
               headers: {
@@ -1843,15 +1820,14 @@
                 Accept: 'application/json',
               },
               body: JSON.stringify({
-                email: email,
-                name: name,
+                email,
+                name,
                 portfolioCount: selectedPortfolios.length,
                 billingPeriod: currentBilling,
                 portfolios: selectedPortfolios,
               }),
             });
 
-            // Ensure we received JSON; if not, surface the raw HTML/text error.
             const contentType =
               checkoutResponse.headers.get('content-type') || '';
             let checkoutData;
@@ -1875,14 +1851,11 @@
               );
             }
 
-            // Redirect to Stripe Checkout page
-            console.log('✅ Redirecting to Stripe Checkout...');
             window.location.href = checkoutData.url;
           } catch (error) {
-            console.error('Checkout error:', error);
-            resultDiv.innerHTML = `<div class="error-message">Erreur: ${error.message}</div>`;
+            alert(`Erreur: ${error.message}`);
             submitButton.disabled = false;
-            buttonText.textContent = 'Payer maintenant';
+            submitButton.textContent = 'Payer maintenant';
           }
         });
 
@@ -1893,15 +1866,9 @@
           window.location.href =
             'https://apps.apple.com/ch/app/openfolio/id6747684283?l=fr-FR';
         } else if (urlParams.get('canceled') === 'true') {
-          goToStep(3); // Show payment step with message
-          resultDiv.innerHTML = `
-            <div class="error-message">
-              ❌ Paiement annulé<br><br>
-              Votre paiement a été annulé. Vous pouvez réessayer quand vous le souhaitez.
-            </div>
-          `;
-          submitButton.disabled = false;
-          buttonText.textContent = 'Réessayer';
+          alert(
+            '❌ Paiement annulé. Vous pouvez réessayer quand vous le souhaitez.'
+          );
         }
 
         // Initialisation
