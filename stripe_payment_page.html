@@ -1244,16 +1244,11 @@
   </head>
   <body>
     <div class="container">
-      <!-- Steps Indicator -->
+      <!-- Steps Indicator (single step) -->
       <div class="steps-indicator">
         <div class="step active" id="step-1-indicator">
           <div class="step-number">1</div>
-          <span>Sélection</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="step" id="step-2-indicator">
-          <div class="step-number">2</div>
-          <span>Paiement</span>
+          <span>Informations et sélection</span>
         </div>
       </div>
 
@@ -1331,6 +1326,27 @@
                   Sélectionnez au moins un portfolio
                 </div>
               </div>
+              <!-- Customer Info (email & name) -->
+              <div class="form-group" style="margin-top: var(--space-6)">
+                <label class="form-label" for="email">Adresse e-mail</label>
+                <input
+                  type="email"
+                  id="email"
+                  class="form-input"
+                  placeholder="votre@email.com"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="name">Nom complet</label>
+                <input
+                  type="text"
+                  id="name"
+                  class="form-input"
+                  placeholder="Jean Dupont"
+                  required
+                />
+              </div>
               <div
                 class="savings-info"
                 id="savings-info"
@@ -1339,99 +1355,9 @@
             </div>
 
             <div class="action-buttons">
-              <button class="btn btn-primary" id="continue-btn" disabled>
-                Continuer vers le paiement
+              <button class="btn btn-primary" id="submit-button" disabled>
+                Payer maintenant
               </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 2: Payment Form -->
-        <div class="step-content" id="step-2">
-          <div class="payment-step">
-            <div class="form-section">
-              <h2 class="form-title">Finaliser le paiement</h2>
-              <p class="form-subtitle">Paiement sécurisé par Stripe</p>
-
-              <!-- Apple Pay / Google Pay (shown if supported) -->
-              <div class="wallets-container" id="wallets-container">
-                <div id="payment-request-button"></div>
-                <div class="wallets-divider">ou</div>
-              </div>
-
-              <form id="payment-form">
-                <div class="form-group">
-                  <label class="form-label" for="email">Adresse e-mail</label>
-                  <input
-                    type="email"
-                    id="email"
-                    class="form-input"
-                    placeholder="votre@email.com"
-                    required
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label" for="name">Nom complet</label>
-                  <input
-                    type="text"
-                    id="name"
-                    class="form-input"
-                    placeholder="Jean Dupont"
-                    required
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Informations de carte</label>
-                  <div id="card-element"></div>
-                  <div id="card-errors" role="alert"></div>
-                </div>
-
-                <div class="action-buttons">
-                  <button type="button" class="btn btn-secondary" id="back-btn">
-                    Retour
-                  </button>
-                  <button
-                    type="submit"
-                    id="submit-button"
-                    class="btn btn-primary"
-                  >
-                    <span id="button-text">Payer maintenant</span>
-                  </button>
-                </div>
-
-                <div id="payment-result"></div>
-              </form>
-
-              <div class="security-note" id="security-note">
-                🔒 <strong>PAIEMENT SÉCURISÉ</strong> - Interface de sélection
-                multiple pour portfolios spécialisés. Vos informations de
-                paiement sont cryptées et sécurisées par Stripe.
-              </div>
-            </div>
-
-            <div class="price-summary">
-              <div class="selected-portfolios">
-                <h4>Résumé de votre commande</h4>
-                <div class="portfolio-list" id="final-selected-list"></div>
-              </div>
-              <div class="price-breakdown">
-                <div
-                  class="original-price"
-                  id="final-original-price"
-                  style="display: none"
-                ></div>
-                <div class="current-price" id="final-current-price">
-                  0.00 CHF
-                </div>
-                <div class="billing-period" id="final-billing-period"></div>
-              </div>
-              <div
-                class="savings-info"
-                id="final-savings-info"
-                style="display: none"
-              ></div>
             </div>
           </div>
         </div>
@@ -1498,10 +1424,7 @@
       }
 
       const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
-      let elements, cardElement;
-      let paymentRequest,
-        paymentRequestButton,
-        paymentRequestSupported = false;
+      let elements;
 
       // Create Stripe card element
       function createCardElement() {
@@ -1807,15 +1730,16 @@
       }
 
       function updateContinueButton() {
-        const continueBtn = document.getElementById('continue-btn');
+        const submitBtn = document.getElementById('submit-button');
+        if (!submitBtn) return;
         if (selectedPortfolios.length > 0) {
-          continueBtn.disabled = false;
-          continueBtn.textContent = `Continuer vers le paiement (${
+          submitBtn.disabled = false;
+          submitBtn.textContent = `Payer maintenant (${
             selectedPortfolios.length
           } portfolio${selectedPortfolios.length > 1 ? 's' : ''})`;
         } else {
-          continueBtn.disabled = true;
-          continueBtn.textContent = 'Continuer vers le paiement';
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Payer maintenant';
         }
       }
 
