@@ -12,7 +12,8 @@
         --bg-light: #f7f9fc;
         --text-muted: #6b7280;
         --shadow-soft: 0 24px 50px rgba(15, 23, 42, 0.12);
-        font-family: "Inter", "Heebo", "Segoe UI", system-ui, -apple-system, sans-serif;
+        font-family: 'Inter', 'Heebo', 'Segoe UI', system-ui, -apple-system,
+          sans-serif;
       }
 
       * {
@@ -20,7 +21,11 @@
       }
 
       body {
-        background: radial-gradient(circle at top, rgba(255, 181, 0, 0.18), transparent 55%),
+        background: radial-gradient(
+            circle at top,
+            rgba(255, 181, 0, 0.18),
+            transparent 55%
+          ),
           var(--bg-light);
         color: var(--brand-ink);
         margin: 0;
@@ -54,7 +59,18 @@
         display: grid;
         place-items: center;
         border-radius: 28px;
-        background: linear-gradient(145deg, rgba(255, 181, 0, 0.14), rgba(31, 41, 55, 0.08));
+        background: linear-gradient(
+          145deg,
+          rgba(255, 181, 0, 0.14),
+          rgba(31, 41, 55, 0.08)
+        );
+        overflow: hidden;
+      }
+      .logo-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 20px;
       }
 
       h1 {
@@ -132,7 +148,11 @@
       }
 
       .qr-card {
-        background: linear-gradient(160deg, rgba(99, 102, 241, 0.12), rgba(31, 41, 55, 0.05));
+        background: linear-gradient(
+          160deg,
+          rgba(99, 102, 241, 0.12),
+          rgba(31, 41, 55, 0.05)
+        );
         padding: 24px 20px 32px;
         border-radius: 24px;
         width: 100%;
@@ -187,40 +207,12 @@
       <!-- Hero section with the OpenFolio visual identity -->
       <section class="hero">
         <div class="logo-wrapper" aria-hidden="true">
-          <svg
-            width="112"
-            height="112"
-            viewBox="0 0 512 512"
-            role="img"
-            aria-label="OpenFolio logo"
-          >
-            <defs>
-              <linearGradient id="paper" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ffca3a" />
-                <stop offset="100%" stop-color="#ffb500" />
-              </linearGradient>
-            </defs>
-            <rect x="78" y="80" width="200" height="280" rx="28" fill="url(#paper)" />
-            <rect x="116" y="140" width="124" height="22" rx="10" fill="#fff4d3" />
-            <rect x="116" y="188" width="96" height="22" rx="10" fill="#fff4d3" />
-            <rect x="116" y="236" width="140" height="22" rx="10" fill="#fff4d3" />
-            <path
-              d="M256 96h118l60 64v232c0 22-18 40-40 40H256c-22 0-40-18-40-40V136c0-22 18-40 40-40z"
-              fill="#1f2937"
-            />
-            <path
-              d="M344 184c-5.6 20-20.8 36.2-40 43.2l13.8 29.8c22.8-8.6 41.8-25.6 53.4-47.6l20.6 20.6v-67.4h-67.4z"
-              fill="#ffb500"
-            />
-            <rect x="296" y="280" width="28" height="84" rx="12" fill="#ffb500" />
-            <rect x="344" y="316" width="28" height="48" rx="12" fill="#ffb500" />
-            <rect x="392" y="256" width="28" height="108" rx="12" fill="#ffb500" />
-          </svg>
+          <img src="/OpenFolio-AppIcon.png" alt="OpenFolio logo" />
         </div>
         <h1>OpenFolio App</h1>
         <p class="subtitle">
-          Access the OpenFolio experience on the go. Download the app or scan the QR code to
-          install it instantly on your iOS or Android device.
+          Access the OpenFolio experience on the go. Download the app or scan
+          the QR code to install it instantly on your iOS or Android device.
         </p>
       </section>
 
@@ -237,7 +229,10 @@
               <path fill="#0d9488" d="M58 65l212 181-68 68L58 65z" />
               <path fill="#f4a261" d="M58 65l276 140-64 64L58 65z" />
               <path fill="#2a9d8f" d="M58 447l212-133-68-68L58 447z" />
-              <path fill="#264653" d="M334 205l86 44c28 14 28 54 0 68l-86 44-64-64 64-64z" />
+              <path
+                fill="#264653"
+                d="M334 205l86 44c28 14 28 54 0 68l-86 44-64-64 64-64z"
+              />
             </svg>
           </span>
           <span class="store-text">
@@ -288,12 +283,14 @@
         </article>
       </section>
 
-      <footer>© <span id="year"></span> OpenFolio · Invest with confidence anywhere.</footer>
+      <footer>
+        © <span id="year"></span> OpenFolio · Invest with confidence anywhere.
+      </footer>
     </main>
 
     <script>
       // Update the footer year automatically to keep the page current
-      document.getElementById("year").textContent = new Date().getFullYear();
+      document.getElementById('year').textContent = new Date().getFullYear();
     </script>
   </body>
 </html>

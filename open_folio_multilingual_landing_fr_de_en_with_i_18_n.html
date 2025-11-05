@@ -194,6 +194,13 @@
         font-size: var(--text-lg);
         transition: all var(--transition-base);
       }
+      .brand img {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        object-fit: contain;
+        box-shadow: 0 0 0 3px rgba(255, 181, 0, 0.15);
+      }
 
       .brand:hover {
         transform: translateY(-1px);
@@ -1125,7 +1132,8 @@
     <div class="topbar" role="navigation" aria-label="top bar">
       <div class="topbar-inner container">
         <div class="brand">
-          <span class="dot" aria-hidden="true"></span> <span>OpenFolio</span>
+          <img src="/OpenFolio-AppIcon.png" alt="OpenFolio" />
+          <span>OpenFolio</span>
         </div>
         <div class="lang-switch">
           <label for="langSwitcher" id="langLabel">Langue</label>
