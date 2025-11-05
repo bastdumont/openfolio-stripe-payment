@@ -39,7 +39,7 @@ No build or lint commands exist - this is a straightforward Python/Flask app wit
 
 ### Backend: Flask Application ([server.py](server.py))
 
-The Flask app uses a factory pattern (`create_app()`) that returns a WSGI-compatible app for Vercel serverless deployment. The module-level `app = create_app()` export at line 622 is required for Vercel's `@vercel/python` runtime.
+The Flask app uses a factory pattern (`create_app()`) that returns a WSGI-compatible app for Vercel serverless deployment. The module-level `app = create_app()` export is required for Vercel's `@vercel/python` runtime.
 
 **Key architectural decisions:**
 
@@ -51,13 +51,19 @@ The Flask app uses a factory pattern (`create_app()`) that returns a WSGI-compat
 
    Prices are looked up by `lookup_key` to avoid duplicate creation. If not found, a new recurring price is created with appropriate metadata.
 
-2. **Stripe Payment Flow (avoiding double charges)**: The app follows Stripe's recommended subscription creation pattern to prevent double charging:
-   - `/create-subscription-incomplete` endpoint creates subscription with `payment_behavior=default_incomplete`
-   - Stripe automatically creates a PaymentIntent for the first invoice
-   - Frontend confirms the PaymentIntent using Stripe Elements
-   - `/verify-subscription` endpoint verifies payment success and subscription activation
+2. **Stripe Checkout Payment Flow**: The app uses Stripe Checkout Sessions for a streamlined payment experience:
+   - `/create-checkout-session` endpoint (lines 617-767) creates a Checkout Session with the dynamically generated price
+   - User is redirected to Stripe's hosted payment page (invoice view)
+   - Upon successful payment, Stripe automatically activates the subscription
+   - User is redirected back to `/payment?session_id=xxx&success=true`
+   - Frontend displays success message based on URL parameters
 
-   This flow is explicitly documented in comments (lines 186-192, 323-324, 1945-1946 in HTML).
+   This approach provides:
+   - Professional hosted invoice page
+   - Automatic subscription activation
+   - Built-in payment method storage
+   - Support for multiple payment methods (cards, Apple Pay, Google Pay, etc.)
+   - No need for Stripe Elements integration on frontend
 
 3. **Error Handling**: Custom error handlers (lines 49-75) ensure API endpoints always return JSON, never HTML error pages. This is critical for the JavaScript frontend error handling.
 
@@ -72,9 +78,9 @@ The Flask app uses a factory pattern (`create_app()`) that returns a WSGI-compat
 The payment page contains:
 - Balder App design system with CSS custom properties (lines 22-100 in HTML)
 - Portfolio selection logic with dynamic pricing calculations matching backend
-- Stripe Elements integration for card payment UI
-- Apple Pay / Google Pay support via Payment Request Button API
-- Comprehensive payment flow handling (subscription creation → payment confirmation → verification)
+- Stripe Checkout integration - redirects to hosted payment page
+- Success/cancel redirect handlers (lines 1991-2015) that display appropriate messages
+- Three-step flow: Portfolio selection → Customer info → Redirect to Stripe Checkout
 
 ### Routing: Vercel Configuration ([vercel.json](vercel.json))
 

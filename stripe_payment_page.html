@@ -1926,25 +1926,16 @@
           const name = document.getElementById('name').value;
 
           try {
-            // Validate price ID before submitting
-            if (!currentPriceId) {
-              throw new Error(
-                'Price ID is missing. Please refresh the page and try again.'
-              );
-            }
-
-            // Debug: Log the price ID being sent
-            console.log('🔍 Submitting payment with:', {
-              priceId: currentPriceId,
+            // Debug: Log the data being sent
+            console.log('🔍 Creating checkout session with:', {
               billing: currentBilling,
               portfolioCount: selectedPortfolios.length,
               portfolios: selectedPortfolios,
             });
 
-            // Step 1: Create subscription with incomplete status (Stripe's recommended flow)
-            // This creates the subscription and PaymentIntent automatically, avoiding double charges
-            const subscriptionResponse = await fetch(
-              '/create-subscription-incomplete',
+            // Create Stripe Checkout Session - this will redirect to invoice page
+            const checkoutResponse = await fetch(
+              '/create-checkout-session',
               {
                 method: 'POST',
                 headers: {
@@ -1963,152 +1954,65 @@
 
             // Ensure we received JSON; if not, surface the raw HTML/text error.
             const contentType =
-              subscriptionResponse.headers.get('content-type') || '';
-            let subscriptionData;
+              checkoutResponse.headers.get('content-type') || '';
+            let checkoutData;
             if (contentType.includes('application/json')) {
-              subscriptionData = await subscriptionResponse.json();
+              checkoutData = await checkoutResponse.json();
             } else {
-              const text = await subscriptionResponse.text();
+              const text = await checkoutResponse.text();
               throw new Error(
                 `Unexpected server response (not JSON). Status ${
-                  subscriptionResponse.status
+                  checkoutResponse.status
                 }. ${text.substring(0, 200)}`
               );
             }
 
-            if (!subscriptionResponse.ok) {
+            if (!checkoutResponse.ok) {
               throw new Error(
-                (subscriptionData &&
-                  subscriptionData.error &&
-                  subscriptionData.error.message) ||
-                  `Request failed with status ${subscriptionResponse.status}`
+                (checkoutData &&
+                  checkoutData.error &&
+                  checkoutData.error.message) ||
+                  `Request failed with status ${checkoutResponse.status}`
               );
             }
 
-            // Step 2: Confirm payment with the PaymentIntent client secret
-            // Stripe automatically created this PaymentIntent as part of the subscription
-            const { error: stripeError, paymentIntent } =
-              await stripe.confirmCardPayment(
-                subscriptionData.clientSecret,
-                {
-                  payment_method: {
-                    card: cardElement,
-                    billing_details: {
-                      name: name,
-                      email: email,
-                    },
-                  },
-                }
-              );
+            // Redirect to Stripe Checkout page
+            console.log('✅ Redirecting to Stripe Checkout...');
+            window.location.href = checkoutData.url;
 
-            if (stripeError) {
-              console.error('Payment confirmation error:', stripeError);
-              resultDiv.innerHTML = `<div class="error-message">Erreur de paiement: ${stripeError.message}</div>`;
-              submitButton.disabled = false;
-              buttonText.textContent = 'Continuer vers le paiement';
-            } else {
-              // Check payment intent status
-              if (paymentIntent && paymentIntent.status === 'succeeded') {
-                // Step 3: Verify subscription is active after payment succeeds
-                const verifyResponse = await fetch('/verify-subscription', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                  },
-                  body: JSON.stringify({
-                    subscriptionId: subscriptionData.subscriptionId,
-                    paymentIntentId: subscriptionData.paymentIntentId,
-                  }),
-                });
-
-                const verifyContentType =
-                  verifyResponse.headers.get('content-type') || '';
-                let verifyResult;
-                if (verifyContentType.includes('application/json')) {
-                  verifyResult = await verifyResponse.json();
-                } else {
-                  const verifyText = await verifyResponse.text();
-                  throw new Error(
-                    `Subscription verification failed. Status ${
-                      verifyResponse.status
-                    }. ${verifyText.substring(0, 200)}`
-                  );
-                }
-
-                if (!verifyResponse.ok) {
-                  throw new Error(
-                    (verifyResult &&
-                      verifyResult.error &&
-                      verifyResult.error.message) ||
-                      `Subscription verification failed with status ${verifyResponse.status}`
-                  );
-                }
-
-                const pricing = calculatePrice(
-                  selectedPortfolios.length,
-                  currentBilling
-                );
-                resultDiv.innerHTML = `
-                  <div class="success-message">
-                      ✅ Paiement effectué avec succès!<br>
-                      <strong>Portfolios sélectionnés:</strong> ${selectedPortfolios.join(
-                        ', '
-                      )}<br>
-                      <strong>Période:</strong> ${
-                        currentBilling === 'annual' ? 'Annuel' : 'Bi-annuel'
-                      }<br>
-                      <strong>Prix:</strong> ${pricing.total.toFixed(2)} CHF<br>
-                      <strong>Subscription ID:</strong> ${
-                        verifyResult.subscriptionId
-                      }<br>
-                      <strong>Status:</strong> ${
-                        verifyResult.status === 'active'
-                          ? '✅ Actif'
-                          : verifyResult.status
-                      }<br>
-                      <br>
-                      <strong>Votre abonnement est maintenant actif!</strong>
-                  </div>
-                `;
-              } else if (
-                paymentIntent &&
-                paymentIntent.status === 'requires_action'
-              ) {
-                // Payment requires additional authentication (3D Secure)
-                resultDiv.innerHTML = `
-                  <div class="error-message">
-                    Authentification requise. Veuillez compléter l'authentification dans la fenêtre qui s'ouvre.
-                  </div>
-                `;
-                submitButton.disabled = false;
-                buttonText.textContent = 'Continuer vers le paiement';
-              } else {
-                // Payment confirmed but status unclear
-                console.log('Payment Intent status:', paymentIntent?.status);
-                resultDiv.innerHTML = `
-                  <div class="error-message">
-                    ❌ Le paiement n'a pas abouti. Status: ${
-                      paymentIntent?.status || 'unknown'
-                    }<br>
-                    Veuillez réessayer.
-                  </div>
-                `;
-                submitButton.disabled = false;
-                buttonText.textContent = 'Continuer vers le paiement';
-              }
-            }
-          } catch (err) {
-            resultDiv.innerHTML = `<div class="error-message">Une erreur s'est produite: ${err.message}</div>`;
+          } catch (error) {
+            console.error('Checkout error:', error);
+            resultDiv.innerHTML = `<div class="error-message">Erreur: ${error.message}</div>`;
+            submitButton.disabled = false;
+            buttonText.textContent = 'Payer maintenant';
           }
-
-          submitButton.disabled = false;
-          const pricing = calculatePrice(
-            selectedPortfolios.length,
-            currentBilling
-          );
-          buttonText.textContent = `Payer ${pricing.total.toFixed(2)} CHF`;
         });
+
+        // Handle success/cancel redirects from Stripe Checkout
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === 'true') {
+          const sessionId = urlParams.get('session_id');
+          goToStep(3); // Show payment step with result
+          resultDiv.innerHTML = `
+            <div class="success-message">
+              ✅ Paiement effectué avec succès!<br><br>
+              <strong>Votre abonnement est maintenant actif!</strong><br><br>
+              Merci d'avoir souscrit à OpenFolio. Vous allez recevoir un email de confirmation.<br><br>
+              <strong>Session ID:</strong> ${sessionId}
+            </div>
+          `;
+          submitButton.style.display = 'none';
+        } else if (urlParams.get('canceled') === 'true') {
+          goToStep(3); // Show payment step with message
+          resultDiv.innerHTML = `
+            <div class="error-message">
+              ❌ Paiement annulé<br><br>
+              Votre paiement a été annulé. Vous pouvez réessayer quand vous le souhaitez.
+            </div>
+          `;
+          submitButton.disabled = false;
+          buttonText.textContent = 'Réessayer';
+        }
 
         // Initialisation
         updateBillingSelection('biannual');

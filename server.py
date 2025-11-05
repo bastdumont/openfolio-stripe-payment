@@ -22,6 +22,7 @@ def create_app() -> Flask:
         # Only modify responses for API routes
         if request.path.startswith('/create-subscription') or \
            request.path.startswith('/create-payment-intent') or \
+           request.path.startswith('/create-checkout-session') or \
            request.path.startswith('/verify-subscription') or \
            request.path.startswith('/cancel-subscription') or \
            request.path.startswith('/list-subscriptions'):
@@ -589,19 +590,19 @@ def create_app() -> Flask:
             }), 500
 
         customer_email = request.args.get("email")
-        
+
         try:
             if customer_email:
                 # Find customer by email
                 customers = stripe.Customer.list(email=customer_email, limit=1)
                 if not customers.data:
                     return jsonify({"subscriptions": []})
-                
+
                 subscriptions = stripe.Subscription.list(customer=customers.data[0].id)
             else:
                 # List all subscriptions (limited for demo)
                 subscriptions = stripe.Subscription.list(limit=10)
-            
+
             return jsonify({
                 "subscriptions": [{
                     "id": sub.id,
@@ -613,6 +614,158 @@ def create_app() -> Flask:
             })
         except Exception as e:
             return jsonify({"error": {"message": str(e)}}), 500
+
+    @app.route("/create-checkout-session", methods=["POST"])
+    def create_checkout_session():
+        """Create a Stripe Checkout Session for subscription payment.
+
+        This redirects the user to a Stripe-hosted payment page with the invoice.
+        Upon successful payment, the subscription is automatically activated.
+
+        Expected JSON body:
+        - email: Customer email
+        - name: Customer full name
+        - portfolioCount: Number of portfolios (1-4)
+        - billingPeriod: 'biannual' or 'annual'
+        - portfolios: List of selected portfolio names (optional, for metadata)
+
+        Returns:
+        - url: Stripe Checkout Session URL to redirect to
+        - sessionId: Checkout Session ID
+        """
+        if not stripe.api_key:
+            return jsonify({
+                "error": {
+                    "message": "Server not configured. Set STRIPE_SECRET_KEY environment variable."
+                }
+            }), 500
+
+        try:
+            data = request.get_json(force=False, silent=True)
+            if data is None:
+                if request.is_json:
+                    data = {}
+                else:
+                    return jsonify({
+                        "error": {
+                            "message": "Invalid request. JSON body required."
+                        }
+                    }), 400
+        except Exception as e:
+            app.logger.error(f"Error parsing JSON request: {str(e)}")
+            return jsonify({
+                "error": {
+                    "message": f"Error parsing request: {str(e)}"
+                }
+            }), 400
+
+        email = data.get("email") if data else None
+        name = data.get("name") if data else None
+        portfolios = data.get("portfolios", []) if data else []
+        portfolio_count = data.get("portfolioCount", len(portfolios) if portfolios else 1)
+        billing_period = data.get("billingPeriod", 'biannual')
+
+        if not email or not name:
+            return jsonify({
+                "error": {
+                    "message": "Missing required fields: email, name"
+                }
+            }), 400
+
+        try:
+            # Get base product ID
+            base_product_id = "prod_TMSfbpU4NW2fRK"
+
+            # Validate portfolio count and billing period
+            if portfolio_count < 1 or portfolio_count > 4:
+                return jsonify({
+                    "error": {
+                        "message": "Portfolio count must be between 1 and 4"
+                    }
+                }), 400
+
+            if billing_period not in ['biannual', 'annual']:
+                return jsonify({
+                    "error": {
+                        "message": "Billing period must be 'biannual' or 'annual'"
+                    }
+                }), 400
+
+            # Get or create price based on portfolio count and billing period
+            price = get_or_create_price(portfolio_count, billing_period, base_product_id)
+
+            # Check if a customer with this email already exists
+            existing_customers = stripe.Customer.list(email=email, limit=1)
+
+            if existing_customers.data:
+                customer = existing_customers.data[0]
+                # Update the customer's name if it has changed
+                if customer.name != name:
+                    customer = stripe.Customer.modify(customer.id, name=name)
+            else:
+                # Create a new customer
+                customer = stripe.Customer.create(
+                    email=email,
+                    name=name,
+                    metadata={
+                        "selected_portfolios": ", ".join(portfolios) if portfolios else "N/A"
+                    }
+                )
+
+            # Get the domain from the request or use a default
+            # Vercel provides the host in request headers
+            domain = request.headers.get('origin') or request.host_url.rstrip('/')
+
+            # Create Checkout Session
+            checkout_session = stripe.checkout.Session.create(
+                customer=customer.id,
+                mode='subscription',
+                line_items=[{
+                    'price': price.id,
+                    'quantity': 1,
+                }],
+                success_url=domain + '/payment?session_id={CHECKOUT_SESSION_ID}&success=true',
+                cancel_url=domain + '/payment?canceled=true',
+                metadata={
+                    "portfolios": ", ".join(portfolios) if portfolios else "N/A",
+                    "portfolio_count": str(len(portfolios)),
+                    "billing_period": billing_period
+                },
+                subscription_data={
+                    "metadata": {
+                        "portfolios": ", ".join(portfolios) if portfolios else "N/A",
+                        "portfolio_count": str(len(portfolios)),
+                        "billing_period": billing_period
+                    }
+                },
+                # Auto-activate subscription upon successful payment
+                payment_method_collection='always',
+            )
+
+            app.logger.info(f"Created Checkout Session {checkout_session.id} for customer {customer.id}")
+
+            return jsonify({
+                "url": checkout_session.url,
+                "sessionId": checkout_session.id
+            })
+
+        except stripe.error.StripeError as e:
+            return jsonify({
+                "error": {
+                    "type": getattr(e, 'type', 'stripe_error'),
+                    "message": e.user_message or str(e),
+                }
+            }), 400
+        except Exception as e:
+            import traceback
+            error_trace = traceback.format_exc()
+            app.logger.error(f"Unexpected error in create_checkout_session: {str(e)}\n{error_trace}")
+            return jsonify({
+                "error": {
+                    "message": f"Server error: {str(e)}",
+                    "type": "server_error"
+                }
+            }), 500
 
     return app
 
