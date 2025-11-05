@@ -95,6 +95,12 @@ def create_app() -> Flask:
         """Serve the general conditions page."""
         return send_from_directory('.', 'cg.html')
 
+    # New route to expose the mobile app download landing page with store links and QR codes.
+    @app.route('/app-link')
+    def app_link():
+        """Serve the dedicated mobile app download page with store badges and QR codes."""
+        return send_from_directory('.', 'openfolio-app-link.html')
+
     @app.route("/health", methods=["GET"])
     def health():
         """Basic health check endpoint."""
