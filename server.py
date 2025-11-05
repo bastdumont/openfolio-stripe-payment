@@ -724,7 +724,9 @@ def create_app() -> Flask:
                     'price': price.id,
                     'quantity': 1,
                 }],
-                success_url=domain + '/payment?session_id={CHECKOUT_SESSION_ID}&success=true',
+                # Redirect to the App Store page after successful payment
+                # Note: Stripe will interpolate {CHECKOUT_SESSION_ID}, but we don't need it for this redirect
+                success_url='https://apps.apple.com/ch/app/openfolio/id6747684283?l=fr-FR',
                 cancel_url=domain + '/payment?canceled=true',
                 metadata={
                     "portfolios": ", ".join(portfolios) if portfolios else "N/A",

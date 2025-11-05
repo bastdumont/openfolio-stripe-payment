@@ -1633,31 +1633,9 @@
                   if (verifyResult.error) {
                     resultDiv.innerHTML = `<div class="error-message">${verifyResult.error.message}</div>`;
                   } else {
-                    const finalPricing = calculatePrice(
-                      selectedPortfolios.length,
-                      currentBilling
-                    );
-                    resultDiv.innerHTML = `
-                      <div class="success-message">
-                        ✅ Paiement effectué avec succès!<br>
-                        <strong>Portfolios sélectionnés:</strong> ${selectedPortfolios.join(
-                          ', '
-                        )}<br>
-                        <strong>Période:</strong> ${
-                          currentBilling === 'annual' ? 'Annuel' : 'Bi-annuel'
-                        }<br>
-                        <strong>Prix:</strong> ${finalPricing.total.toFixed(
-                          2
-                        )} CHF<br>
-                        <strong>Subscription ID:</strong> ${
-                          verifyResult.subscriptionId
-                        }<br>
-                        <strong>Status:</strong> ${
-                          verifyResult.status === 'active'
-                            ? '✅ Actif'
-                            : verifyResult.status
-                        }
-                      </div>`;
+                    // Redirect to App Store after successful verification
+                    window.location.href =
+                      'https://apps.apple.com/ch/app/openfolio/id6747684283?l=fr-FR';
                   }
                 } else {
                   ev.complete('fail');
@@ -1934,23 +1912,20 @@
             });
 
             // Create Stripe Checkout Session - this will redirect to invoice page
-            const checkoutResponse = await fetch(
-              '/create-checkout-session',
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Accept: 'application/json',
-                },
-                body: JSON.stringify({
-                  email: email,
-                  name: name,
-                  portfolioCount: selectedPortfolios.length,
-                  billingPeriod: currentBilling,
-                  portfolios: selectedPortfolios,
-                }),
-              }
-            );
+            const checkoutResponse = await fetch('/create-checkout-session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+              },
+              body: JSON.stringify({
+                email: email,
+                name: name,
+                portfolioCount: selectedPortfolios.length,
+                billingPeriod: currentBilling,
+                portfolios: selectedPortfolios,
+              }),
+            });
 
             // Ensure we received JSON; if not, surface the raw HTML/text error.
             const contentType =
@@ -1979,7 +1954,6 @@
             // Redirect to Stripe Checkout page
             console.log('✅ Redirecting to Stripe Checkout...');
             window.location.href = checkoutData.url;
-
           } catch (error) {
             console.error('Checkout error:', error);
             resultDiv.innerHTML = `<div class="error-message">Erreur: ${error.message}</div>`;
@@ -1991,17 +1965,9 @@
         // Handle success/cancel redirects from Stripe Checkout
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('success') === 'true') {
-          const sessionId = urlParams.get('session_id');
-          goToStep(3); // Show payment step with result
-          resultDiv.innerHTML = `
-            <div class="success-message">
-              ✅ Paiement effectué avec succès!<br><br>
-              <strong>Votre abonnement est maintenant actif!</strong><br><br>
-              Merci d'avoir souscrit à OpenFolio. Vous allez recevoir un email de confirmation.<br><br>
-              <strong>Session ID:</strong> ${sessionId}
-            </div>
-          `;
-          submitButton.style.display = 'none';
+          // Redirect directly to the App Store after successful Checkout return
+          window.location.href =
+            'https://apps.apple.com/ch/app/openfolio/id6747684283?l=fr-FR';
         } else if (urlParams.get('canceled') === 'true') {
           goToStep(3); // Show payment step with message
           resultDiv.innerHTML = `
