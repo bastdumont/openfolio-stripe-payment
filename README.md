@@ -51,13 +51,16 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
 4. **Set up environment variables**:
 
    ```bash
-   # Create .env file
-   cp .env.example .env
+   # Create .env file (optional, for local development)
+   cp env.example .env
 
-   # Add your Stripe keys
-   STRIPE_SECRET_KEY=sk_test_your_secret_key_here
-   STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
-   PORT=4242
+   # Add your Stripe secret key (required for backend)
+   # Replace 'sk_test_your_secret_key_here' with your actual Stripe secret key
+   export STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+   export PORT=4242  # optional, defaults to 4242
+
+   # Note: STRIPE_PUBLISHABLE_KEY is hardcoded in stripe_payment_page.html
+   # Update it directly in the HTML file (line ~1484)
    ```
 
 5. **Run the development server**:
@@ -95,8 +98,10 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
    ```
 
 4. **Set Environment Variables** in Vercel Dashboard:
-   - `STRIPE_SECRET_KEY`: Your Stripe secret key
-   - `PORT`: 4242
+   - `STRIPE_SECRET_KEY`: Your Stripe secret key (required)
+   - `PORT`: 4242 (optional)
+
+   **Important**: The `STRIPE_PUBLISHABLE_KEY` is hardcoded in `stripe_payment_page.html` (around line 1484). Update it directly in the HTML file before deploying.
 
 ### Environment Variables Setup
 
@@ -106,10 +111,11 @@ In your Vercel dashboard:
 2. Navigate to "Environment Variables"
 3. Add the following variables:
 
-| Variable            | Value                          | Environment |
-| ------------------- | ------------------------------ | ----------- |
-| `STRIPE_SECRET_KEY` | `sk_test_...` or `sk_live_...` | All         |
-| `PORT`              | `4242`                         | All         |
+| Variable            | Value                          | Environment | Notes                                    |
+| ------------------- | ------------------------------ | ----------- | ---------------------------------------- |
+| `STRIPE_SECRET_KEY` | `sk_test_...` or `sk_live_...` | All         | Required for backend API                 |
+| `PORT`              | `4242`                         | All         | Optional, defaults to 4242               |
+| `STRIPE_PUBLISHABLE_KEY` | `pk_test_...` or `pk_live_...` | N/A         | Hardcoded in `stripe_payment_page.html` |
 
 ### Vercel Runtime Notes
 
@@ -119,7 +125,7 @@ In your Vercel dashboard:
 
 ## 📁 Project Structure
 
-```
+```text
 openfolio-stripe-payment/
 ├── server.py                                    # Flask backend
 ├── open_folio_multilingual_landing_*.html       # Landing page
@@ -134,25 +140,52 @@ openfolio-stripe-payment/
 
 ## 🔧 API Endpoints
 
-### Payment Endpoints
+### Page Routes
 
-- `GET /` - Landing page
-- `GET /payment` - Payment page
-- `POST /create-subscription` - Create Stripe subscription
-- `POST /cancel-subscription` - Cancel subscription
-- `GET /list-subscriptions` - List customer subscriptions
-- `GET /health` - Health check
+- `GET /` - Landing page (multilingual)
+- `GET /payment` - Payment page with Stripe Checkout
+- `GET /privacy` - Privacy policy page
+- `GET /terms` - Terms and conditions page
+
+### API Endpoints
+
+- `GET /health` - Health check (returns Stripe configuration status)
+- `POST /create-checkout-session` - Create Stripe Checkout Session (primary payment flow)
+- `POST /create-subscription-incomplete` - Create subscription with incomplete status (for wallet payments)
+- `POST /verify-subscription` - Verify subscription payment status
+- `POST /cancel-subscription` - Cancel a subscription
+- `GET /list-subscriptions` - List customer subscriptions (optional email query param)
 
 ### Request/Response Examples
 
-**Create Subscription**:
+**Create Checkout Session** (Primary Payment Flow):
 
 ```json
-POST /create-subscription
+POST /create-checkout-session
 {
   "email": "user@example.com",
   "name": "John Doe",
-  "priceId": "price_1234567890",
+  "portfolioCount": 2,
+  "billingPeriod": "annual",
+  "portfolios": ["ImmoFolio", "CryptoFolio"]
+}
+
+Response:
+{
+  "url": "https://checkout.stripe.com/c/pay/...",
+  "sessionId": "cs_test_..."
+}
+```
+
+**Create Subscription (Incomplete)** - For wallet payments:
+
+```json
+POST /create-subscription-incomplete
+{
+  "email": "user@example.com",
+  "name": "John Doe",
+  "portfolioCount": 2,
+  "billingPeriod": "biannual",
   "portfolios": ["ImmoFolio", "CryptoFolio"]
 }
 
@@ -160,7 +193,9 @@ Response:
 {
   "subscriptionId": "sub_1234567890",
   "clientSecret": "pi_1234567890_secret_...",
-  "customerId": "cus_1234567890"
+  "customerId": "cus_1234567890",
+  "priceId": "price_1234567890",
+  "paymentIntentId": "pi_1234567890"
 }
 ```
 
@@ -195,7 +230,9 @@ The application uses the **Balder App** design system:
 
 ### Test Webhooks
 
-Use Stripe CLI for local webhook testing:
+**Note**: This application uses Stripe Checkout Sessions which handle webhooks automatically. No custom webhook endpoint is required for basic subscription functionality.
+
+If you need to add custom webhook handling, create a `/webhook` endpoint and use:
 
 ```bash
 stripe listen --forward-to localhost:4242/webhook
@@ -203,12 +240,18 @@ stripe listen --forward-to localhost:4242/webhook
 
 ## 📊 Portfolio Pricing
 
-| Portfolio    | 6 Months | 12 Months | Savings |
-| ------------ | -------- | --------- | ------- |
-| 1 Portfolio  | 180 CHF  | 324 CHF   | 10%     |
-| 2 Portfolios | 324 CHF  | 583 CHF   | 20%     |
-| 3 Portfolios | 432 CHF  | 778 CHF   | 30%     |
-| 4 Portfolios | 504 CHF  | 907 CHF   | 40%     |
+| Portfolio Count | 6 Months | 12 Months | Volume Discount | Annual Savings |
+| --------------- | -------- | --------- | --------------- | -------------- |
+| 1 Portfolio     | 180 CHF  | 324 CHF   | 0%              | 10%            |
+| 2 Portfolios    | 324 CHF  | 583 CHF   | 10%             | 20%            |
+| 3 Portfolios    | 432 CHF  | 778 CHF   | 20%             | 30%            |
+| 4 Portfolios    | 504 CHF  | 907 CHF   | 30%             | 40%            |
+
+**Pricing Logic**:
+
+- Base price: 180 CHF per portfolio for 6 months
+- Volume discounts: 0%, 10%, 20%, 30% for 1-4 portfolios
+- Annual billing: Additional 10% discount on top of volume discount
 
 ## 🚀 Performance
 
