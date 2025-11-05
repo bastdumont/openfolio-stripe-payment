@@ -1,5 +1,4 @@
 {
-  "version": 2,
   "builds": [
     {
       "src": "server.py",
@@ -8,47 +7,19 @@
   ],
   "routes": [
     {
-      "src": "^/$",
-      "dest": "/open_folio_multilingual_landing_fr_de_en_with_i_18_n.html"
-    },
-    {
-      "src": "^/payment$",
-      "dest": "/stripe_payment_page.html"
-    },
-    {
-      "src": "^/privacy$",
-      "dest": "/privacy.html"
-    },
-    {
-      "src": "^/terms$",
-      "dest": "/cg.html"
-    },
-    {
-      "src": "^/health$",
+      "src": "/",
       "dest": "server.py"
     },
     {
-      "src": "^/create-payment-intent$",
+      "src": "/payment",
       "dest": "server.py"
     },
     {
-      "src": "^/create-subscription-incomplete$",
+      "src": "/privacy",
       "dest": "server.py"
     },
     {
-      "src": "^/create-subscription$",
-      "dest": "server.py"
-    },
-    {
-      "src": "^/verify-subscription$",
-      "dest": "server.py"
-    },
-    {
-      "src": "^/cancel-subscription$",
-      "dest": "server.py"
-    },
-    {
-      "src": "^/list-subscriptions$",
+      "src": "/terms",
       "dest": "server.py"
     },
     {
