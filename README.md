@@ -15,6 +15,7 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
   - CryptoFolio (Direct Crypto)
   - IndirectCryptoFolio (Crypto Stocks/ETFs)
   - TechnoFolio (Future Technologies)
+- **📲 Mobile App Access**: Dedicated `openfolio-app-link.html` page with store badges and QR codes for instant installs
 
 ## 🛠️ Technology Stack
 
@@ -70,6 +71,13 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
    ```
 
 6. **Open in browser**: http://localhost:4242
+
+## 📲 Mobile App Download Page
+
+- **Path**: `openfolio-app-link.html` (served at `/app-link` when running the Flask server)
+- **What it includes**: Branded OpenFolio hero, Google Play / App Store buttons, and QR codes that deep-link to the official listings
+- **How to use locally**: Start the Flask server and visit http://localhost:4242/app-link to access the install handoff page
+- **Deployment note**: The page is static, so it deploys automatically with the rest of the project and stays in sync across environments
 
 ## 🌐 Vercel Deployment
 
