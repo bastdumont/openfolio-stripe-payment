@@ -100,6 +100,11 @@ def create_app() -> Flask:
     def app_link():
         """Serve the dedicated mobile app download page with store badges and QR codes."""
         return send_from_directory('.', 'openfolio-app-link.html')
+    
+    @app.route('/assets/<path:filename>')
+    def serve_assets(filename):
+        """Serve static assets from the assets folder."""
+        return send_from_directory('assets', filename)
 
     @app.route("/health", methods=["GET"])
     def health():
