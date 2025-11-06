@@ -846,6 +846,10 @@
         color: var(--text-secondary);
         display: none;
       }
+      /* Show answer when item is open */
+      .faq-item.open .faq-a {
+        display: block;
+      }
 
       /* CTA */
       .final-cta {
@@ -1186,9 +1190,9 @@
           </h1>
           <p class="subtitle" data-i18n="hero_sub">
             Je suis Philippe Beckers, background technologique, plus de 30 ans
-            d’expérience d’investissement. Membre ARIF et inscrit au registre
+            d'expérience d'investissement. Membre ARIF et inscrit au registre
             suisse des conseillers à la clientèle. Ma méthode : horizon long
-            TERME, diversification thématique, discipline « Buy & Hold ».
+            TERME, diversification thématique, discipline « Buy & Hold ».
           </p>
           <div class="badge">
             <span class="price">1 CHF</span>
@@ -1228,7 +1232,7 @@
             <h2 data-i18n="about_title">À propos de Philippe</h2>
             <p data-i18n="about_text">
               Ingénieur de formation avec un background en technologie et plus
-              de 30 ans d’expérience d’investissement. Agréé par l’Association
+              de 30 ans d'expérience d'investissement. Agréé par l'Association
               Romande des Intermédiaires Financiers (ARIF) et inscrit au
               Registre suisse des conseillers financiers à la clientèle.
             </p>
@@ -1242,7 +1246,7 @@
           <div>
             <h3 data-i18n="about_promise_title">Ce que vous obtenez</h3>
             <p data-i18n="about_promise_text">
-              Des portefeuilles thématiques que j’investis avec mes propres
+              Des portefeuilles thématiques que j'investis avec mes propres
               fonds : crypto (directe ou via entreprises/produits exposés),
               technologies innovantes/disruptives et immobilier suisse via des
               fonds cotés défiscalisés.
@@ -1256,17 +1260,17 @@
     <section class="principles" id="principles">
       <div class="container">
         <h2 class="section-title scroll-animate" data-i18n="principles_title">
-          Mon approche d’investissement
+          Mon approche d'investissement
         </h2>
         <div class="card-grid">
           <div class="card scroll-animate">
             <div class="icon">📆</div>
-            <h3 data-i18n="p1_title">Horizon d’investissement long TERME</h3>
+            <h3 data-i18n="p1_title">Horizon d'investissement long TERME</h3>
             <p data-i18n="p1_text">
-              La bourse n’est pas un loto : elle évolue selon l’économie, la
-              géopolitique, les innovations et les cycles. À l’ère de l’IA et du
+              La bourse n'est pas un loto : elle évolue selon l'économie, la
+              géopolitique, les innovations et les cycles. À l'ère de l'IA et du
               trading algorithmique, spéculer devient difficile ; il faut
-              investir sur la durée, « surfer » les tendances et sortir aux bons
+              investir sur la durée, « surfer » les tendances et sortir aux bons
               moments.
             </p>
           </div>
@@ -1278,19 +1282,19 @@
               technologies et immobilier suisse (fonds cotés défiscalisés). Les
               combiner élargit la diversification sectorielle et géographique,
               réduit la volatilité et augmente les chances de performance. Les
-              cryptos sont par exemple décorrélées de l’immobilier suisse. Vous
-              pouvez aussi faire du « cherry picking » si vous démarrez petit.
+              cryptos sont par exemple décorrélées de l'immobilier suisse. Vous
+              pouvez aussi faire du « cherry picking » si vous démarrez petit.
             </p>
           </div>
           <div class="card scroll-animate">
             <div class="icon">🏁</div>
-            <h3 data-i18n="p3_title">Discipline « Buy & Hold »</h3>
+            <h3 data-i18n="p3_title">Discipline « Buy & Hold »</h3>
             <p data-i18n="p3_text">
               Pas de day trading. On achète au bon timing et on garde plusieurs
               mois/années. Les ventes peuvent être déclenchées par :
-              retournement de marché (choc géopolitique/éco), fin de cycle
-              (p. ex. cycle de 4 ans du Bitcoin), prise de bénéfices ou nouvelle
-              dégradant le potentiel d’un titre.
+              retournement de marché (choc géopolitique/éco), fin de cycle (p.
+              ex. cycle de 4 ans du Bitcoin), prise de bénéfices ou nouvelle
+              dégradant le potentiel d'un titre.
             </p>
           </div>
         </div>
@@ -1403,7 +1407,7 @@
             >
           </div>
           <p data-i18n="pricing_sub">
-            Moins qu’un café. Conçu pour faire grandir votre capital.
+            Moins qu'un café. Conçu pour faire grandir votre capital.
           </p>
           <ul class="price-features">
             <li>
@@ -1457,9 +1461,9 @@
             </button>
             <div class="faq-a">
               <p data-i18n="a1">
-                Non. OpenFolio n’exige aucun lien bancaire ni données
+                Non. OpenFolio n'exige aucun lien bancaire ni données
                 financières personnelles. Vous suivez les portefeuilles et
-                décidez vous-même d’investir.
+                décidez vous-même d'investir.
               </p>
             </div>
           </div>
@@ -1483,7 +1487,7 @@
             </button>
             <div class="faq-a">
               <p data-i18n="a3">
-                C’est justement l’objectif : apprendre en suivant des décisions
+                C'est justement l'objectif : apprendre en suivant des décisions
                 réelles, expliquées simplement. Pas besoin de diplôme en
                 finance.
               </p>
@@ -1497,7 +1501,7 @@
             </button>
             <div class="faq-a">
               <p data-i18n="a4">
-                Oui, vous pouvez faire du « cherry picking » – par exemple 1‑2
+                Oui, vous pouvez faire du « cherry picking » – par exemple 1‑2
                 cryptos et 1 fonds immobilier pour démarrer avec une mise
                 limitée.
               </p>
@@ -1505,14 +1509,14 @@
           </div>
           <div class="faq-item scroll-animate">
             <button class="faq-q">
-              <span data-i18n="q5">Qu’est‑ce qui déclenche une vente ?</span
+              <span data-i18n="q5">Qu'est‑ce qui déclenche une vente ?</span
               ><span>+</span>
             </button>
             <div class="faq-a">
               <p data-i18n="a5">
-                Un retournement de marché, la fin d’un cycle (p. ex. cycle de 4
+                Un retournement de marché, la fin d'un cycle (p. ex. cycle de 4
                 ans du Bitcoin), une prise de bénéfices ou une nouvelle qui
-                dégrade le potentiel d’un titre.
+                dégrade le potentiel d'un titre.
               </p>
             </div>
           </div>
@@ -1523,7 +1527,7 @@
             </button>
             <div class="faq-a">
               <p data-i18n="a6">
-                Oui. L’abonnement est sans engagement long terme et résiliable à
+                Oui. L'abonnement est sans engagement long terme et résiliable à
                 tout moment.
               </p>
             </div>
@@ -1604,14 +1608,14 @@
         });
       });
 
-      // FAQ toggles
+      // FAQ toggles (class-based for reliability)
       document.querySelectorAll('.faq-q').forEach((btn) => {
         btn.addEventListener('click', () => {
-          const ans = btn.parentElement.querySelector('.faq-a');
+          const item = btn.closest('.faq-item');
           const icon = btn.querySelector('span:last-child');
-          const isOpen = ans.style.display === 'block';
-          ans.style.display = isOpen ? 'none' : 'block';
-          icon.textContent = isOpen ? '+' : '−';
+          const nowOpen = !item.classList.contains('open');
+          item.classList.toggle('open', nowOpen);
+          if (icon) icon.textContent = nowOpen ? '−' : '+';
         });
       });
 
@@ -1638,31 +1642,25 @@
           _meta_desc:
             'Suivez des portefeuilles réels gérés par Philippe Beckers (ARIF). Horizon long TERME, diversification thématique et Buy & Hold – 1 CHF/jour.',
           hero_title: 'Suivez des portefeuilles réels, en toute transparence',
-          hero_sub:
-            'Je suis Philippe Beckers, background technologique, plus de 30 ans d’expérience d’investissement. Membre ARIF et inscrit au registre suisse des conseillers à la clientèle. Ma méthode : horizon long TERME, diversification thématique, discipline « Buy & Hold ».',
+          hero_sub: `Je suis Philippe Beckers, background technologique, plus de 30 ans d'expérience d'investissement. Membre ARIF et inscrit au registre suisse des conseillers à la clientèle. Ma méthode : horizon long TERME, diversification thématique, discipline « Buy & Hold ».`,
           price_period: 'par jour',
-          cta_start: 'Commencer aujourd’hui',
+          cta_start: `Commencer aujourd'hui`,
           cta_learn: 'En savoir plus',
           trust_transparency: '100% transparence',
           trust_learn: 'Apprenez en suivant',
           trust_expert: 'Méthode éprouvée',
           about_title: 'À propos de Philippe',
-          about_text:
-            'Ingénieur de formation avec un background en technologie et plus de 30 ans d’expérience d’investissement. Agréé par l’Association Romande des Intermédiaires Financiers (ARIF) et inscrit au Registre suisse des conseillers financiers à la clientèle.',
+          about_text: `Ingénieur de formation avec un background en technologie et plus de 30 ans d'expérience d'investissement. Agréé par l'Association Romande des Intermédiaires Financiers (ARIF) et inscrit au Registre suisse des conseillers financiers à la clientèle.`,
           about_badge: 'ARIF & Registre des conseillers',
           about_promise_title: 'Ce que vous obtenez',
-          about_promise_text:
-            'Des portefeuilles thématiques que j’investis avec mes propres fonds : crypto (directe ou via entreprises/produits exposés), technologies innovantes/disruptives et immobilier suisse via des fonds cotés défiscalisés.',
-          principles_title: 'Mon approche d’investissement',
-          p1_title: 'Horizon d’investissement long TERME',
-          p1_text:
-            'La bourse n’est pas un loto : elle évolue selon l’économie, la géopolitique, les innovations et les cycles. À l’ère de l’IA et du trading algorithmique, spéculer devient difficile ; il faut investir sur la durée, « surfer » les tendances et sortir aux bons moments.',
+          about_promise_text: `Des portefeuilles thématiques que j'investis avec mes propres fonds : crypto (directe ou via entreprises/produits exposés), technologies innovantes/disruptives et immobilier suisse via des fonds cotés défiscalisés.`,
+          principles_title: `Mon approche d'investissement`,
+          p1_title: `Horizon d'investissement long TERME`,
+          p1_text: `La bourse n'est pas un loto : elle évolue selon l'économie, la géopolitique, les innovations et les cycles. À l'ère de l'IA et du trading algorithmique, spéculer devient difficile ; il faut investir sur la durée, « surfer » les tendances et sortir aux bons moments.`,
           p2_title: 'Diversification stratégique',
-          p2_text:
-            'Accédez à des portefeuilles thématiques : crypto, nouvelles technologies et immobilier suisse (fonds cotés défiscalisés). Les combiner élargit la diversification sectorielle et géographique, réduit la volatilité et augmente les chances de performance. Les cryptos sont par exemple décorrélées de l’immobilier suisse. Vous pouvez aussi faire du « cherry picking » si vous démarrez petit.',
-          p3_title: 'Discipline « Buy & Hold »',
-          p3_text:
-            'Pas de day trading. On achète au bon timing et on garde plusieurs mois/années. Les ventes peuvent être déclenchées par : retournement de marché (choc géopolitique/éco), fin de cycle (p. ex. cycle de 4 ans du Bitcoin), prise de bénéfices ou une nouvelle qui dégrade le potentiel d’un titre.',
+          p2_text: `Accédez à des portefeuilles thématiques : crypto, nouvelles technologies et immobilier suisse (fonds cotés défiscalisés). Les combiner élargit la diversification sectorielle et géographique, réduit la volatilité et augmente les chances de performance. Les cryptos sont par exemple décorrélées de l'immobilier suisse. Vous pouvez aussi faire du « cherry picking » si vous démarrez petit.`,
+          p3_title: `Discipline « Buy & Hold »`,
+          p3_text: `Pas de day trading. On achète au bon timing et on garde plusieurs mois/années. Les ventes peuvent être déclenchées par : retournement de marché (choc géopolitique/éco), fin de cycle (p. ex. cycle de 4 ans du Bitcoin), prise de bénéfices ou une nouvelle qui dégrade le potentiel d'un titre.`,
           solution_title: 'OpenFolio, sans bruit ni jargon',
           solution_lead:
             'Abonnement simple pour suivre mes portefeuilles thématiques, adaptés à votre profil de risque, avec alertes en temps réel et explications claires.',
@@ -1689,8 +1687,7 @@
           pricing_badge: 'Le plus choisi',
           pricing_name: 'OpenFolio Premium',
           price_unit: 'jour',
-          pricing_sub:
-            'Moins qu’un café. Conçu pour faire grandir votre capital.',
+          pricing_sub: `Moins qu'un café. Conçu pour faire grandir votre capital.`,
           pf1: 'Accès aux portefeuilles thématiques de Philippe',
           pf2: 'Alertes en temps réel',
           pf3: 'Transparence complète sur chaque mouvement',
@@ -1701,25 +1698,24 @@
           pricing_note: 'Sans engagement long terme. Annulation à tout moment.',
           faq_title: 'Questions fréquentes',
           q1: 'Dois-je lier mon compte bancaire ?',
-          a1: 'Non. OpenFolio n’exige aucun lien bancaire ni données financières personnelles. Vous suivez les portefeuilles et décidez vous-même d’investir.',
+          a1: `Non. OpenFolio n'exige aucun lien bancaire ni données financières personnelles. Vous suivez les portefeuilles et décidez vous-même d'investir.`,
           q2: 'Comment OpenFolio se rémunère ?',
           a2: 'Par un abonnement simple de 1 CHF/jour donnant accès aux portefeuilles, aux alertes et aux contenus pédagogiques. Aucun pourcentage ni frais cachés.',
           q3: 'Et si je débute totalement ?',
-          a3: 'C’est justement l’objectif : apprendre en suivant des décisions réelles, expliquées simplement. Pas besoin de diplôme en finance.',
+          a3: `C'est justement l'objectif : apprendre en suivant des décisions réelles, expliquées simplement. Pas besoin de diplôme en finance.`,
           q4: 'Puis-je choisir seulement quelques positions ?',
-          a4: 'Oui, vous pouvez faire du « cherry picking » – par exemple 1‑2 cryptos et 1 fonds immobilier pour démarrer avec une mise limitée.',
-          q5: 'Qu’est‑ce qui déclenche une vente ?',
-          a5: 'Un retournement de marché, la fin d’un cycle (p. ex. cycle de 4 ans du Bitcoin), une prise de bénéfices ou une nouvelle qui dégrade le potentiel d’un titre.',
+          a4: 'Oui, vous pouvez faire du « cherry picking » – par exemple 1‑2 cryptos et 1 fonds immobilier pour démarrer avec une mise limitée.',
+          q5: `Qu'est‑ce qui déclenche une vente ?`,
+          a5: `Un retournement de marché, la fin d'un cycle (p. ex. cycle de 4 ans du Bitcoin), une prise de bénéfices ou une nouvelle qui dégrade le potentiel d'un titre.`,
           q6: 'Puis‑je annuler à tout moment ?',
-          a6: 'Oui. L’abonnement est sans engagement long terme et résiliable à tout moment.',
+          a6: `Oui. L'abonnement est sans engagement long terme et résiliable à tout moment.`,
           final_title: 'Prêt à investir plus intelligemment ?',
           final_sub:
             'Rejoignez des investisseurs qui privilégient la transparence et la discipline sur le bruit.',
           final_cta: 'Commencer – 1 CHF/jour',
           final_note: 'Sans engagement. Annulation simple, à tout moment.',
           rights: 'Tous droits réservés.',
-          disclaimer:
-            'Informations fournies par Philippe Beckers. Rien de ce qui est présenté ne constitue un conseil en investissement. Les performances passées ne préjugent pas des performances futures. Vous restez seul responsable de vos décisions d'investissement.',
+          disclaimer: `Informations fournies par Philippe Beckers. Rien de ce qui est présenté ne constitue un conseil en investissement. Les performances passées ne préjugent pas des performances futures. Vous restez seul responsable de vos décisions d'investissement.`,
           footer_privacy: 'Politique de confidentialité',
           footer_terms: 'Conditions générales',
         },
@@ -1749,10 +1745,10 @@
             'Börse ist kein Lotto: Sie folgt Konjunktur, Geopolitik, Innovation und Zyklen. In Zeiten von KI und Algotrading ist Spekulation schwierig – daher langfristig investieren, Trends reiten und rechtzeitig aussteigen.',
           p2_title: 'Strategische Diversifikation',
           p2_text:
-            'Zugang zu Themenportfolios: Krypto, neue Technologien und Schweizer Immobilien (kotierte, steuerbegünstigte Fonds). Die Kombination verbreitert Sektoren/Regionen, reduziert Schwankungen und erhöht die Chance auf Rendite. Krypto ist z. B. wenig mit Schweizer Immobilien korreliert. Auch „Cherry Picking“ ist möglich.',
+            'Zugang zu Themenportfolios: Krypto, neue Technologien und Schweizer Immobilien (kotierte, steuerbegünstigte Fonds). Die Kombination verbreitert Sektoren/Regionen, reduziert Schwankungen und erhöht die Chance auf Rendite. Krypto ist z. B. wenig mit Schweizer Immobilien korreliert. Auch „Cherry Picking" ist möglich.',
           p3_title: 'Buy‑&‑Hold‑Disziplin',
           p3_text:
-            'Kein Daytrading. Wir kaufen mit gutem Timing und halten Monate/Jahre. Verkäufe bei: Marktumschwung (geo/ökonomischer Schock), Zyklusende (z. B. 4‑Jahres‑Zyklus von Bitcoin), Gewinnmitnahme oder negativer Titel‑News.',
+            'Kein Daytrading. Wir kaufen mit gutem Timing und halten Monate/Jahre. Verkäufe bei: Marktumschwung (geo/ökonomischer Schock), Zyklusende (z. B. 4‑Jahres‑Zyklus von Bitcoin), Gewinnmitnahme oder negativer Titel‑News.',
           solution_title: 'OpenFolio – ohne Lärm und Jargon',
           solution_lead:
             'Einfaches Abo, um meinen Themenportfolios zu folgen – mit Echtzeit‑Alerts und klaren Erklärungen, passend zu Ihrem Risikoprofil.',
@@ -1796,9 +1792,9 @@
           q3: 'Ich bin Anfänger – geht das?',
           a3: 'Genau dafür: Lernen, indem Sie reale Entscheidungen mit klaren Erklärungen verfolgen. Kein Finanzstudium nötig.',
           q4: 'Kann ich nur wenige Positionen wählen?',
-          a4: 'Ja, „Cherry Picking“ ist möglich – z. B. 1–2 Kryptos und 1 Immobilienfonds für den Start.',
+          a4: 'Ja, „Cherry Picking" ist möglich – z. B. 1–2 Kryptos und 1 Immobilienfonds für den Start.',
           q5: 'Wann wird verkauft?',
-          a5: 'Bei Marktumschwung, Zyklusende (z. B. 4‑Jahres‑Bitcoin‑Zyklus), Gewinnmitnahme oder negativen Titelnachrichten.',
+          a5: 'Bei Marktumschwung, Zyklusende (z. B. 4‑Jahres‑Bitcoin‑Zyklus), Gewinnmitnahme oder negativen Titelnachrichten.',
           q6: 'Jederzeit kündbar?',
           a6: 'Ja, jederzeit ohne langfristige Bindung.',
           final_title: 'Bereit, smarter zu investieren?',
@@ -1817,8 +1813,7 @@
           _meta_desc:
             'Follow real portfolios managed by Philippe Beckers (ARIF). Long‑term horizon, thematic diversification, and buy‑and‑hold discipline — for 1 CHF/day.',
           hero_title: 'Follow Real Portfolios—100% Transparent',
-          hero_sub:
-            'I’m Philippe Beckers, tech background with 30+ years investing. ARIF member and registered in Switzerland’s client‑advisor register. My method: long‑term horizon, thematic diversification, and disciplined buy & hold.',
+          hero_sub: `I'm Philippe Beckers, tech background with 30+ years investing. ARIF member and registered in Switzerland's client‑advisor register. My method: long‑term horizon, thematic diversification, and disciplined buy & hold.`,
           price_period: 'per day',
           cta_start: 'Start today',
           cta_learn: 'Learn more',
@@ -1834,14 +1829,12 @@
             'Thematic portfolios I invest my own capital in: crypto (direct or via companies/products), innovative/disruptive technologies, and Swiss real estate via tax‑advantaged listed funds.',
           principles_title: 'My investment approach',
           p1_title: 'Long‑term investment horizon',
-          p1_text:
-            'Markets aren’t a lottery. They move with macro conditions, geopolitics, innovation and cycles. In the age of AI and algorithmic trading, speculation is tough—so we invest over time, ride trends and exit at the right moments.',
+          p1_text: `Markets aren't a lottery. They move with macro conditions, geopolitics, innovation and cycles. In the age of AI and algorithmic trading, speculation is tough—so we invest over time, ride trends and exit at the right moments.`,
           p2_title: 'Strategic diversification',
           p2_text:
             'Access thematic portfolios: crypto, new technologies and Swiss real estate (listed, tax‑efficient funds). Combining them broadens sector/geo exposure, reduces volatility and increases performance odds. Crypto is, for example, uncorrelated with Swiss real estate. You can also cherry‑pick if you start small.',
           p3_title: 'Buy‑and‑hold discipline',
-          p3_text:
-            'No day trading. We buy with proper timing and hold for months/years. Sells can be triggered by: market reversals (geo/economic shocks), end of cycle (e.g., Bitcoin’s 4‑year cycle), profit‑taking or news that impairs a position.',
+          p3_text: `No day trading. We buy with proper timing and hold for months/years. Sells can be triggered by: market reversals (geo/economic shocks), end of cycle (e.g., Bitcoin's 4‑year cycle), profit‑taking or news that impairs a position.`,
           solution_title: 'OpenFolio—no noise, no jargon',
           solution_lead:
             'A simple subscription to follow my thematic portfolios with real‑time alerts and clear explanations, aligned to your risk profile.',
@@ -1868,7 +1861,7 @@
           pricing_name: 'OpenFolio Premium',
           price_unit: 'day',
           pricing_sub: 'Less than a coffee. Built to grow your capital.',
-          pf1: 'Access to Philippe’s thematic portfolios',
+          pf1: `Access to Philippe's thematic portfolios`,
           pf2: 'Real‑time alerts',
           pf3: 'Full transparency on every move',
           pf4: 'Monthly performance reports',
@@ -1881,12 +1874,12 @@
           a1: 'No. OpenFolio requires no bank linking or personal financial data. You follow the portfolios and decide for yourself.',
           q2: 'How do you make money?',
           a2: 'Via a simple subscription of 1 CHF/day for portfolio access, alerts and educational content. No percentages or hidden fees.',
-          q3: 'What if I’m a complete beginner?',
+          q3: `What if I'm a complete beginner?`,
           a3: 'Perfect. Learn by following real decisions with clear explanations. No finance degree needed.',
           q4: 'Can I cherry‑pick a few positions?',
           a4: 'Yes—e.g., 1–2 cryptos and 1 real‑estate fund if you want to start with a smaller budget.',
           q5: 'What triggers a sell?',
-          a5: 'Market reversals, end of cycle (e.g., Bitcoin’s 4‑year cycle), profit taking, or news that impairs a position.',
+          a5: `Market reversals, end of cycle (e.g., Bitcoin's 4‑year cycle), profit taking, or news that impairs a position.`,
           q6: 'Can I cancel anytime?',
           a6: 'Absolutely. Cancel anytime with no questions asked.',
           final_title: 'Ready to invest smarter?',
@@ -1933,10 +1926,14 @@
       })();
       let initial = stored || (navigator.language || 'fr').slice(0, 2);
       if (!['fr', 'de', 'en'].includes(initial)) initial = 'fr';
-      select.value = initial;
-      applyLang(initial);
-
-      select.addEventListener('change', (e) => applyLang(e.target.value));
+      if (select) {
+        select.value = initial;
+        applyLang(initial);
+        select.addEventListener('change', (e) => applyLang(e.target.value));
+      } else {
+        // Fallback: still apply detected language
+        applyLang(initial);
+      }
 
       // Basic CTA tracking hook (replace with real analytics)
       document
