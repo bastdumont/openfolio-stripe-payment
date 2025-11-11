@@ -8,6 +8,7 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
 
 - **🌐 Multilingual Support**: French, German, and English interfaces
 - **💳 Stripe Integration**: Secure subscription-based payments
+- **🧾 VAT Handling**: Automatically adds Swiss VAT (8.1%) with HT/TTC breakdown before checkout
 - **📱 Responsive Design**: Optimized for all devices
 - **🎨 Modern UI/UX**: Balder App design system with premium styling
 - **💰 Investment Portfolios**:
@@ -248,7 +249,7 @@ stripe listen --forward-to localhost:4242/webhook
 
 ## 📊 Portfolio Pricing
 
-| Portfolio Count | 6 Months | 12 Months | Volume Discount | Annual Savings |
+| Portfolio Count | 6 Months (HT) | 12 Months (HT) | Volume Discount | Annual Savings |
 | --------------- | -------- | --------- | --------------- | -------------- |
 | 1 Portfolio     | 180 CHF  | 324 CHF   | 0%              | 10%            |
 | 2 Portfolios    | 324 CHF  | 583 CHF   | 10%             | 20%            |
@@ -257,9 +258,12 @@ stripe listen --forward-to localhost:4242/webhook
 
 **Pricing Logic**:
 
-- Base price: 180 CHF per portfolio for 6 months
+- Base price: 180 CHF per portfolio for 6 months (HT)
 - Volume discounts: 0%, 10%, 20%, 30% for 1-4 portfolios
 - Annual billing: Additional 10% discount on top of volume discount
+- Swiss VAT: 8.1% VAT is applied on top of the discounted amount and surfaced on the payment page before redirecting to Stripe Checkout
+
+> Final TTC amounts (HT + 8.1% VAT) are displayed on the payment page before redirecting to Stripe Checkout.
 
 ## 🚀 Performance
 

@@ -1,7 +1,12 @@
 import os
+from decimal import Decimal, ROUND_HALF_UP
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import stripe
+
+
+# Swiss VAT (TVA) rate for subscriptions (8.1%)
+VAT_RATE = Decimal('0.081')
 
 
 def create_app() -> Flask:
@@ -122,29 +127,39 @@ def create_app() -> Flask:
         Returns:
             Stripe Price object
         """
-        # Discount configuration (matches frontend)
-        base_price = 180.0  # CHF per portfolio for 6 months
+        # Discount configuration (matches frontend) - all amounts in CHF (HT)
+        base_price = Decimal('180.00')  # CHF per portfolio for 6 months (hors TVA)
         volume_discounts = {
-            1: 0.0,    # 0% discount
-            2: 0.1,    # 10% discount
-            3: 0.2,    # 20% discount
-            4: 0.3,    # 30% discount
+            1: Decimal('0.00'),  # 0% discount
+            2: Decimal('0.10'),  # 10% discount
+            3: Decimal('0.20'),  # 20% discount
+            4: Decimal('0.30'),  # 30% discount
         }
-        annual_discount = 0.1  # 10% additional discount for annual
-        
-        # Calculate discounted price
-        original_total = base_price * portfolio_count * (2 if billing_period == 'annual' else 1)
-        volume_discount = volume_discounts.get(portfolio_count, 0)
-        discounted_total = original_total * (1 - volume_discount)
-        
+        annual_discount = Decimal('0.10')  # 10% additional discount for annual billing
+
+        # Calculate totals excluding VAT
+        billing_multiplier = Decimal('2') if billing_period == 'annual' else Decimal('1')
+        original_total_ex_vat = (base_price * Decimal(portfolio_count) * billing_multiplier)
+        volume_discount = volume_discounts.get(portfolio_count, Decimal('0'))
+        discounted_total_ex_vat = (original_total_ex_vat * (Decimal('1') - volume_discount))
+
         if billing_period == 'annual':
-            discounted_total *= (1 - annual_discount)
-        
-        # Round to 2 decimal places and convert to cents
-        amount_cents = int(round(discounted_total * 100))
-        
-        # Create lookup key for price identification
-        lookup_key = f"openfolio_{billing_period}_{portfolio_count}_portfolios"
+            discounted_total_ex_vat *= (Decimal('1') - annual_discount)
+
+        # Round HT totals to centime precision
+        original_total_ex_vat = original_total_ex_vat.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        discounted_total_ex_vat = discounted_total_ex_vat.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        # Apply VAT (TVA 8.1%)
+        vat_amount = (discounted_total_ex_vat * VAT_RATE).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        total_with_vat = (discounted_total_ex_vat + vat_amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        original_total_incl_vat = (original_total_ex_vat * (Decimal('1') + VAT_RATE)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        # Convert to cents for Stripe (amount TTC)
+        amount_cents = int((total_with_vat * 100).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+
+        # Create lookup key for price identification (include VAT marker to avoid legacy prices)
+        lookup_key = f"openfolio_{billing_period}_{portfolio_count}_portfolios_vat81"
         
         # Try to find existing price with this lookup key
         try:
@@ -180,14 +195,26 @@ def create_app() -> Flask:
                 metadata={
                     'portfolio_count': str(portfolio_count),
                     'billing_period': billing_period,
-                    'original_amount': str(original_total),
-                    'discounted_amount': str(discounted_total),
+                    'original_amount_ex_vat': str(original_total_ex_vat),
+                    'original_amount_incl_vat': str(original_total_incl_vat),
+                    'discounted_amount_ex_vat': str(discounted_total_ex_vat),
+                    'vat_rate': str(VAT_RATE),
+                    'vat_amount': str(vat_amount),
+                    'total_amount_incl_vat': str(total_with_vat),
                     'volume_discount': str(volume_discount),
                     'annual_discount_applied': str(billing_period == 'annual')
                 },
                 nickname=f"OpenFolio {billing_period.capitalize()} - {portfolio_count} portfolio{'s' if portfolio_count > 1 else ''}"
             )
-            app.logger.info(f"Created new price {price.id} for {portfolio_count} portfolios, {billing_period} billing, amount: {discounted_total} CHF")
+            app.logger.info(
+                "Created new price %s for %s portfolios (%s billing) - total TTC: %s CHF (HT: %s CHF, TVA: %s CHF)",
+                price.id,
+                portfolio_count,
+                billing_period,
+                total_with_vat,
+                discounted_total_ex_vat,
+                vat_amount,
+            )
             return price
         except Exception as e:
             app.logger.error(f"Error creating price: {str(e)}")

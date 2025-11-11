@@ -620,6 +620,23 @@
       .price-breakdown {
         margin-bottom: var(--space-6);
       }
+      .price-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 1rem;
+        font-weight: var(--font-weight-medium);
+        color: var(--color-dark);
+        padding: var(--space-2) 0;
+      }
+      .price-row.total {
+        font-size: 1.5rem;
+        font-weight: var(--font-weight-extrabold);
+        margin-top: var(--space-2);
+      }
+      .price-row span:last-child {
+        font-weight: var(--font-weight-semibold);
+      }
 
       .original-price {
         font-size: 1.1rem;
@@ -1352,7 +1369,18 @@
                   id="original-price"
                   style="display: none"
                 ></div>
-                <div class="current-price" id="current-price">0.00 CHF</div>
+                <div class="price-row">
+                  <span>Sous-total (HT)</span>
+                  <span id="net-price">0.00 CHF</span>
+                </div>
+                <div class="price-row">
+                  <span>TVA (8.1%)</span>
+                  <span id="vat-amount">0.00 CHF</span>
+                </div>
+                <div class="price-row total">
+                  <span>Total TTC</span>
+                  <span id="current-price">0.00 CHF</span>
+                </div>
                 <div class="billing-period" id="billing-period">
                   Sélectionnez au moins un portfolio
                 </div>
@@ -1405,6 +1433,9 @@
         4: 0.3, // 30% de remise
       };
       const annualDiscount = 0.1; // 10% de remise supplémentaire pour l'annuel
+      const vatRate = 0.081; // TVA suisse 8.1%
+      const roundToTwo = (value) =>
+        Math.round((value + Number.EPSILON) * 100) / 100;
 
       // Mapping des price IDs Stripe - Working subscription prices
       // Verified via Stripe MCP: price_1SPjjxGCDHpNGbpgJ1RVlzL8 = 6 months (180 CHF), price_1SPjjxGCDHpNGbpg7PId5lki = 1 year (324 CHF)
@@ -1503,7 +1534,7 @@
             currency: 'chf',
             total: {
               label: 'OpenFolio - Abonnement',
-              amount: Math.round(pricing.total * 100),
+              amount: Math.round(pricing.totalInclVat * 100),
             },
             requestPayerName: true,
             requestPayerEmail: true,
@@ -1608,7 +1639,7 @@
           paymentRequest.update({
             total: {
               label: 'OpenFolio - Abonnement',
-              amount: Math.round(pricing.total * 100),
+              amount: Math.round(pricing.totalInclVat * 100),
             },
           });
         }
@@ -1616,25 +1647,40 @@
 
       // Fonctions de calcul de prix
       function calculatePrice(portfolioCount, billing) {
-        if (portfolioCount === 0) return { total: 0, original: 0, discount: 0 };
+        if (portfolioCount === 0)
+          return {
+            totalExVat: 0,
+            vatAmount: 0,
+            totalInclVat: 0,
+            originalExVat: 0,
+            originalInclVat: 0,
+            discountInclVat: 0,
+          };
 
-        const originalTotal =
-          basePrice * portfolioCount * (billing === 'annual' ? 2 : 1);
-        let discountedTotal = originalTotal;
+        const billingMultiplier = billing === 'annual' ? 2 : 1;
+        const originalExVat = roundToTwo(
+          basePrice * portfolioCount * billingMultiplier
+        );
+        let discountedExVat = roundToTwo(
+          originalExVat * (1 - (volumeDiscounts[portfolioCount] || 0))
+        );
 
-        // Appliquer la remise de volume
-        const volumeDiscount = volumeDiscounts[portfolioCount] || 0;
-        discountedTotal *= 1 - volumeDiscount;
-
-        // Appliquer la remise annuelle
         if (billing === 'annual') {
-          discountedTotal *= 1 - annualDiscount;
+          discountedExVat = roundToTwo(discountedExVat * (1 - annualDiscount));
         }
 
+        const vatAmount = roundToTwo(discountedExVat * vatRate);
+        const totalInclVat = roundToTwo(discountedExVat + vatAmount);
+        const originalInclVat = roundToTwo(originalExVat * (1 + vatRate));
+        const discountInclVat = roundToTwo(originalInclVat - totalInclVat);
+
         return {
-          total: discountedTotal,
-          original: originalTotal,
-          discount: originalTotal - discountedTotal,
+          totalExVat: discountedExVat,
+          vatAmount,
+          totalInclVat,
+          originalExVat,
+          originalInclVat,
+          discountInclVat,
         };
       }
 
@@ -1651,11 +1697,13 @@
         // Note: We no longer need to set currentPriceId here since the backend
         // will create/get the correct price based on portfolioCount and billingPeriod
         // Keeping for backward compatibility but it won't be used
-        currentPriceId = stripePriceIds[currentBilling][portfolioCount] || '';
+        currentPriceId = '';
       }
 
       function updatePriceElements(prefix, pricing, portfolioCount) {
         const priceElement = document.getElementById(prefix + 'current-price');
+        const netPriceElement = document.getElementById(prefix + 'net-price');
+        const vatAmountElement = document.getElementById(prefix + 'vat-amount');
         const originalPriceElement = document.getElementById(
           prefix + 'original-price'
         );
@@ -1665,14 +1713,14 @@
         const savingsInfoElement = document.getElementById(
           prefix + 'savings-info'
         );
-        // Fix: ensure correct element ID for selected list
         const selectedListId =
           prefix === 'final-' ? 'final-selected-list' : 'selected-list';
         const selectedListElement = document.getElementById(selectedListId);
 
-        // Defensive: if any expected element is missing, skip updates to avoid runtime errors
         if (
           !priceElement ||
+          !netPriceElement ||
+          !vatAmountElement ||
           !originalPriceElement ||
           !billingPeriodElement ||
           !savingsInfoElement ||
@@ -1683,6 +1731,8 @@
 
         if (portfolioCount === 0) {
           priceElement.textContent = '0.00 CHF';
+          netPriceElement.textContent = '0.00 CHF';
+          vatAmountElement.textContent = '0.00 CHF';
           originalPriceElement.style.display = 'none';
           savingsInfoElement.style.display = 'none';
           billingPeriodElement.textContent =
@@ -1691,25 +1741,28 @@
           return;
         }
 
-        // Mettre à jour le prix affiché
-        priceElement.textContent = `${pricing.total.toFixed(2)} CHF`;
+        const formatAmount = (value) => `${value.toFixed(2)} CHF`;
 
-        // Mettre à jour la liste des portfolios sélectionnés
+        netPriceElement.textContent = formatAmount(pricing.totalExVat);
+        vatAmountElement.textContent = formatAmount(pricing.vatAmount);
+        priceElement.textContent = formatAmount(pricing.totalInclVat);
+
         selectedListElement.textContent = selectedPortfolios.join(', ');
 
-        // Mettre à jour le prix d'origine si applicable
-        if (pricing.discount > 0) {
-          originalPriceElement.textContent = `${pricing.original.toFixed(
-            2
-          )} CHF`;
+        if (pricing.discountInclVat > 0) {
+          originalPriceElement.textContent = formatAmount(
+            pricing.originalInclVat
+          );
           originalPriceElement.style.display = 'block';
 
-          const savingsPercent = Math.round(
-            (pricing.discount / pricing.original) * 100
-          );
-          let savingsText = `💰 Économie de ${pricing.discount.toFixed(
-            2
-          )} CHF (${savingsPercent}%)`;
+          const savingsPercent = pricing.originalInclVat
+            ? Math.round(
+                (pricing.discountInclVat / pricing.originalInclVat) * 100
+              )
+            : 0;
+          const savingsText = `💰 Économie de ${formatAmount(
+            pricing.discountInclVat
+          )} (${savingsPercent}%)`;
 
           savingsInfoElement.textContent = savingsText;
           savingsInfoElement.style.display = 'block';
@@ -1718,7 +1771,6 @@
           savingsInfoElement.style.display = 'none';
         }
 
-        // Mettre à jour la période de facturation
         const billingText =
           currentBilling === 'annual'
             ? 'Facturé annuellement'
@@ -1758,16 +1810,19 @@
         });
 
         updatePricing();
+        updateContinueButton();
       }
 
       function updateContinueButton() {
         const submitBtn = document.getElementById('submit-button');
         if (!submitBtn) return;
-        if (selectedPortfolios.length > 0) {
+        const count = selectedPortfolios.length;
+        if (count > 0) {
+          const pricing = calculatePrice(count, currentBilling);
           submitBtn.disabled = false;
-          submitBtn.textContent = `Payer maintenant (${
-            selectedPortfolios.length
-          } portfolio${selectedPortfolios.length > 1 ? 's' : ''})`;
+          submitBtn.textContent = `Payer maintenant – ${pricing.totalInclVat.toFixed(
+            2
+          )} CHF TTC (${count} portfolio${count > 1 ? 's' : ''})`;
         } else {
           submitBtn.disabled = true;
           submitBtn.textContent = 'Payer maintenant';
@@ -1886,7 +1941,7 @@
           } catch (error) {
             alert(`Erreur: ${error.message}`);
             submitButton.disabled = false;
-            submitButton.textContent = 'Payer maintenant';
+            updateContinueButton();
           }
         });
 
