@@ -1,5 +1,7 @@
 import os
 from decimal import Decimal, ROUND_HALF_UP
+import smtplib
+from email.message import EmailMessage
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import stripe
@@ -115,6 +117,102 @@ def create_app() -> Flask:
     def health():
         """Basic health check endpoint."""
         return jsonify({"status": "ok", "stripe_configured": bool(stripe.api_key)}), 200
+
+    def send_email(recipient: str, subject: str, body: str) -> bool:
+        """Send an email using SMTP credentials defined in the environment."""
+        if not recipient:
+            app.logger.warning("Email skipped: missing recipient")
+            return False
+
+        smtp_host = os.environ.get("SMTP_HOST")
+        if not smtp_host:
+            app.logger.warning("SMTP_HOST not configured; skipping email send")
+            return False
+
+        sender = os.environ.get("EMAIL_SENDER")
+        if not sender:
+            app.logger.warning("EMAIL_SENDER not configured; skipping email send")
+            return False
+
+        smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+        smtp_username = os.environ.get("SMTP_USERNAME")
+        smtp_password = os.environ.get("SMTP_PASSWORD")
+        use_tls = os.environ.get("SMTP_USE_TLS", "true").lower() in {"1", "true", "yes"}
+
+        message = EmailMessage()
+        message["From"] = sender
+        message["To"] = recipient
+        message["Subject"] = subject
+        message.set_content(body)
+
+        try:
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                if use_tls:
+                    server.starttls()
+                if smtp_username and smtp_password:
+                    server.login(smtp_username, smtp_password)
+                server.send_message(message)
+            app.logger.info("Email sent to %s", recipient)
+            return True
+        except Exception as exc:
+            app.logger.error("Failed to send email to %s: %s", recipient, exc)
+            return False
+
+    def format_currency(amount_minor_units: int, currency: str) -> str:
+        amount_major = Decimal(amount_minor_units or 0) / Decimal('100')
+        return f"{amount_major.quantize(Decimal('0.01'))} {currency.upper()}"
+
+    def notify_payment_success(invoice: dict):
+        """Send invoice email to customer and notification to team after payment."""
+        invoice_id = invoice.get('id', 'unknown')
+        currency = invoice.get('currency', 'chf')
+        amount_paid_text = format_currency(invoice.get('amount_paid', 0), currency)
+        invoice_number = invoice.get('number') or invoice_id
+        invoice_link = invoice.get('hosted_invoice_url') or invoice.get('invoice_pdf') or 'N/A'
+
+        # Resolve customer email
+        customer_email = invoice.get('customer_email')
+        customer_id = invoice.get('customer')
+        if not customer_email and customer_id:
+            try:
+                customer = stripe.Customer.retrieve(customer_id)
+                customer_email = customer.get('email')
+            except Exception as exc:
+                app.logger.warning("Unable to retrieve customer %s: %s", customer_id, exc)
+
+        customer_name = invoice.get('customer_name')
+        if not customer_name and invoice.get('customer'):  # fetch from customer object if available
+            try:
+                customer = stripe.Customer.retrieve(invoice['customer'])
+                customer_name = customer.get('name')
+            except Exception:
+                pass
+
+        if customer_email:
+            subject = f"Votre facture OpenFolio #{invoice_number}"
+            body = (
+                f"Bonjour {customer_name or ''}\n\n"
+                f"Merci pour votre paiement. Voici les informations de votre facture :\n"
+                f"- Montant payé : {amount_paid_text}\n"
+                f"- Numéro de facture : {invoice_number}\n"
+                f"- Consulter / télécharger : {invoice_link}\n\n"
+                "L'équipe OpenFolio"
+            )
+            send_email(customer_email, subject, body)
+        else:
+            app.logger.warning("Invoice %s: no customer email available; skipping client notification", invoice_id)
+
+        team_email = os.environ.get('TEAM_NOTIFICATION_EMAIL')
+        if team_email:
+            subject = f"[OpenFolio] Paiement confirmé - facture {invoice_number}"
+            body = (
+                "Paiement confirmé sur Stripe.\n"
+                f"- Facture : {invoice_number}\n"
+                f"- Montant payé : {amount_paid_text}\n"
+                f"- Client : {customer_name or customer_email or customer_id or 'inconnu'}\n"
+                f"- Lien facture : {invoice_link}\n"
+            )
+            send_email(team_email, subject, body)
 
     def get_or_create_price(portfolio_count, billing_period, base_product_id):
         """Get or create a Stripe price with the correct discount based on portfolio count and billing period.
@@ -806,6 +904,31 @@ def create_app() -> Flask:
                     "type": "server_error"
                 }
             }), 500
+
+    @app.route("/webhook", methods=["POST"])
+    def webhook():
+        """Handle Stripe asynchronous events (invoice payment success notifications)."""
+        payload = request.get_data(as_text=True)
+        sig_header = request.headers.get('Stripe-Signature')
+        webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+
+        try:
+            if webhook_secret:
+                event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+            else:
+                event = request.get_json(force=True)
+        except ValueError:
+            return jsonify({"error": {"message": "Invalid payload"}}), 400
+        except stripe.error.SignatureVerificationError:
+            return jsonify({"error": {"message": "Invalid signature"}}), 400
+
+        event_type = event.get('type')
+        data_object = event.get('data', {}).get('object', {})
+
+        if event_type == 'invoice.payment_succeeded':
+            notify_payment_success(data_object)
+
+        return jsonify({"status": "ok"})
 
     return app
 
