@@ -8,7 +8,6 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
 
 - **🌐 Multilingual Support**: French, German, and English interfaces
 - **💳 Stripe Integration**: Secure subscription-based payments
-- **📨 Post-payment Emails**: Automatic invoice email to clients and internal alerts after successful payments
 - **🧾 VAT Handling**: Automatically adds Swiss VAT (8.1%) with HT/TTC breakdown before checkout
 - **📱 Responsive Design**: Optimized for all devices
 - **🎨 Modern UI/UX**: Balder App design system with premium styling
@@ -126,22 +125,6 @@ In your Vercel dashboard:
 | `STRIPE_SECRET_KEY` | `sk_test_...` or `sk_live_...` | All         | Required for backend API                 |
 | `PORT`              | `4242`                         | All         | Optional, defaults to 4242               |
 | `STRIPE_PUBLISHABLE_KEY` | `pk_test_...` or `pk_live_...` | N/A         | Hardcoded in `stripe_payment_page.html` |
-| `STRIPE_WEBHOOK_SECRET` | `whsec_...`                   | All         | Required for verifying Stripe webhooks   |
-| `SMTP_HOST`         | SMTP server                    | All         | Required for sending notification emails |
-| `SMTP_PORT`         | e.g. `587`                     | All         | Defaults to 587                          |
-| `SMTP_USERNAME`     | SMTP username                  | All         | Optional (depends on provider)           |
-| `SMTP_PASSWORD`     | SMTP password                  | All         | Optional (depends on provider)           |
-| `SMTP_USE_TLS`      | `true` / `false`               | All         | Defaults to `true`                       |
-| `EMAIL_SENDER`      | `no-reply@openfolio.com`       | All         | Required sender address                  |
-| `TEAM_NOTIFICATION_EMAIL` | `ops@openfolio.com`       | All         | Optional team notification address       |
-
-### Stripe Webhook Setup
-
-1. Deploy or run the backend so `/webhook` is publicly reachable (e.g. `https://your-app.vercel.app/webhook`).
-2. In the Stripe Dashboard, navigate to **Developers → Webhooks** and add an endpoint pointing to `/webhook`.
-3. Select at least the `invoice.payment_succeeded` event.
-4. Copy the signing secret (`whsec_...`) and store it in `STRIPE_WEBHOOK_SECRET`.
-5. Ensure SMTP environment variables are configured so customer invoices and team notifications can be emailed.
 
 ### Vercel Runtime Notes
 
@@ -281,8 +264,6 @@ stripe listen --forward-to localhost:4242/webhook
 - Swiss VAT: 8.1% VAT is applied on top of the discounted amount and surfaced on the payment page before redirecting to Stripe Checkout
 
 > Final TTC amounts (HT + 8.1% VAT) are displayed on the payment page before redirecting to Stripe Checkout.
-
-Customer invoices and internal notifications are dispatched automatically upon receiving the `invoice.payment_succeeded` webhook.
 
 ## 🚀 Performance
 
