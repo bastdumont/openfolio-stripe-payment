@@ -121,7 +121,7 @@ def create_app() -> Flask:
         
         Args:
             portfolio_count: Number of portfolios (1-4)
-            billing_period: 'biannual' or 'annual'
+            billing_period: 'monthly', 'biannual', or 'annual'
             base_product_id: The base product ID to use
             
         Returns:
@@ -138,7 +138,13 @@ def create_app() -> Flask:
         annual_discount = Decimal('0.10')  # 10% additional discount for annual billing
 
         # Calculate totals excluding VAT
-        billing_multiplier = Decimal('2') if billing_period == 'annual' else Decimal('1')
+        if billing_period == 'annual':
+            billing_multiplier = Decimal('2')  # 360 CHF per portfolio for 1 year
+        elif billing_period == 'monthly':
+            billing_multiplier = Decimal('1') / Decimal('6')  # 30 CHF per portfolio per month
+        else:  # biannual
+            billing_multiplier = Decimal('1')  # 180 CHF per portfolio for 6 months
+        
         original_total_ex_vat = (base_price * Decimal(portfolio_count) * billing_multiplier)
         volume_discount = volume_discounts.get(portfolio_count, Decimal('0'))
         discounted_total_ex_vat = (original_total_ex_vat * (Decimal('1') - volume_discount))
@@ -178,6 +184,9 @@ def create_app() -> Flask:
             # Determine interval based on billing period
             if billing_period == 'annual':
                 interval = 'year'
+                interval_count = 1
+            elif billing_period == 'monthly':
+                interval = 'month'
                 interval_count = 1
             else:  # biannual
                 interval = 'month'
@@ -330,10 +339,10 @@ def create_app() -> Flask:
                         }
                     }), 400
                 
-                if billing_period not in ['biannual', 'annual']:
+                if billing_period not in ['monthly', 'biannual', 'annual']:
                     return jsonify({
                         "error": {
-                            "message": "Billing period must be 'biannual' or 'annual'"
+                            "message": "Billing period must be 'monthly', 'biannual', or 'annual'"
                         }
                     }), 400
                 
@@ -722,10 +731,10 @@ def create_app() -> Flask:
                     }
                 }), 400
 
-            if billing_period not in ['biannual', 'annual']:
+            if billing_period not in ['monthly', 'biannual', 'annual']:
                 return jsonify({
                     "error": {
-                        "message": "Billing period must be 'biannual' or 'annual'"
+                        "message": "Billing period must be 'monthly', 'biannual', or 'annual'"
                     }
                 }), 400
 

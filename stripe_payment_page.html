@@ -1347,6 +1347,7 @@
             <div class="billing-selector">
               <div class="billing-title">Période de facturation</div>
               <div class="billing-toggle">
+                <div class="billing-option" data-billing="monthly">1 mois</div>
                 <div class="billing-option selected" data-billing="biannual">
                   6 mois
                 </div>
@@ -1657,7 +1658,15 @@
             discountInclVat: 0,
           };
 
-        const billingMultiplier = billing === 'annual' ? 2 : 1;
+        let billingMultiplier;
+        if (billing === 'annual') {
+          billingMultiplier = 2; // 360 CHF per portfolio for 1 year
+        } else if (billing === 'monthly') {
+          billingMultiplier = 1 / 6; // 30 CHF per portfolio per month
+        } else {
+          billingMultiplier = 1; // 180 CHF per portfolio for 6 months
+        }
+
         const originalExVat = roundToTwo(
           basePrice * portfolioCount * billingMultiplier
         );
@@ -1774,6 +1783,8 @@
         const billingText =
           currentBilling === 'annual'
             ? 'Facturé annuellement'
+            : currentBilling === 'monthly'
+            ? 'Facturé mensuellement'
             : 'Facturé tous les 6 mois';
         billingPeriodElement.textContent = billingText;
       }
