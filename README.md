@@ -50,6 +50,23 @@ A modern, multilingual investment portfolio platform with integrated Stripe paym
    pip install -r requirements.txt
    ```
 
+4. **Set environment variables**:
+
+   ```bash
+   # Required: Stripe API key
+   export STRIPE_SECRET_KEY=sk_test_your_key_here
+   
+   # Optional: Server port (defaults to 4242)
+   export PORT=4242
+   
+   # Required for profile form email notifications:
+   export SMTP_HOST=mail.balder-app.com
+   export SMTP_PORT=587
+   export SMTP_USER=openfolio@balder-app.com
+   export SMTP_PASSWORD=your_smtp_password_here
+   export PROFILE_NOTIFICATION_EMAIL=bastien@balder-app.com
+   ```
+
 4. **Set up environment variables**:
 
    ```bash

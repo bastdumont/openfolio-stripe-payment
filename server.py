@@ -3,7 +3,17 @@ from decimal import Decimal, ROUND_HALF_UP
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import stripe
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime
 
+# Load environment variables from .env file if present
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed, skip loading .env file
 
 # Swiss VAT (TVA) rate for subscriptions (8.1%)
 VAT_RATE = Decimal('0.081')
@@ -105,6 +115,210 @@ def create_app() -> Flask:
     def app_link():
         """Serve the dedicated mobile app download page with store badges and QR codes."""
         return send_from_directory('.', 'openfolio-app-link.html')
+    
+    @app.route('/profile')
+    def profile():
+        """Serve the risk profile questionnaire page."""
+        return send_from_directory('.', 'profile.html')
+    
+    def send_profile_email(profile_data):
+        """
+        Send profile form submission via email notification.
+        
+        Requires environment variables:
+        - SMTP_HOST: SMTP server hostname (e.g., smtp.gmail.com)
+        - SMTP_PORT: SMTP server port (default: 587)
+        - SMTP_USER: Sender email address
+        - SMTP_PASSWORD: Sender email password or app-specific password
+        - PROFILE_NOTIFICATION_EMAIL: Comma-separated recipient emails
+          (default: "bastien@balder-app.com,philippe.beckers@sparrtner.ch")
+        """
+        try:
+            # Get SMTP configuration from environment variables
+            smtp_host = os.environ.get("SMTP_HOST", "")
+            smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+            smtp_user = os.environ.get("SMTP_USER", "")
+            smtp_password = os.environ.get("SMTP_PASSWORD", "")
+            recipients_raw = os.environ.get(
+                "PROFILE_NOTIFICATION_EMAIL",
+                "bastien@balder-app.com,philippe.beckers@sparrtner.ch",
+            )
+            # Parse and clean recipient list
+            recipient_emails = [e.strip() for e in recipients_raw.split(",") if e.strip()]
+            
+            # Validate required SMTP configuration
+            if not smtp_host or not smtp_user or not smtp_password:
+                app.logger.error("SMTP configuration missing. Required: SMTP_HOST, SMTP_USER, SMTP_PASSWORD")
+                return False
+            if not recipient_emails:
+                app.logger.error("No valid recipient emails configured in PROFILE_NOTIFICATION_EMAIL.")
+                return False
+            
+            # Create email message
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = "New OpenFolio Risk Profile Submission"
+            msg['From'] = smtp_user
+            msg['To'] = ", ".join(recipient_emails)
+            
+            # Format profile data
+            submission_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # Create HTML email body
+            html_body = f"""
+            <html>
+              <head></head>
+              <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <h2 style="color: #1a1a1a;">New OpenFolio Risk Profile Submission</h2>
+                <p><strong>Submission Date:</strong> {submission_date}</p>
+                
+                <table style="border-collapse: collapse; width: 100%; max-width: 600px; margin: 20px 0;">
+                  <tr style="background-color: #f8f9fa;">
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; width: 40%;">Market Knowledge</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{profile_data.get('marketKnowledge', 'N/A')}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold;">Instrument Knowledge</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{profile_data.get('instrumentKnowledge', 'N/A')}</td>
+                  </tr>
+                  <tr style="background-color: #f8f9fa;">
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold;">Fluctuation Tolerance</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{profile_data.get('fluctuationTolerance', 'N/A')}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold;">Max Annual Loss</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{profile_data.get('maxAnnualLoss', 'N/A')}</td>
+                  </tr>
+                  <tr style="background-color: #f8f9fa;">
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold;">Investment Goal</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{profile_data.get('investmentGoal', 'N/A')}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold;">Liquidity Need</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{profile_data.get('liquidityNeed', 'N/A')}</td>
+                  </tr>
+                  <tr style="background-color: #f8f9fa;">
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold;">Regular Investment</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{profile_data.get('regularInvestment', 'N/A')}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold;">Initial Amount</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{profile_data.get('initialAmount', 'N/A')} CHF</td>
+                  </tr>
+                  <tr style="background-color: #f8f9fa;">
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold;">Time Horizon</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{profile_data.get('timeHorizon', 'N/A')}</td>
+                  </tr>
+                </table>
+                
+                {f'<p><strong>User Email:</strong> {profile_data.get("email", "Not provided")}</p>' if profile_data.get('email') else ''}
+                {f'<p><strong>User Name:</strong> {profile_data.get("name", "Not provided")}</p>' if profile_data.get('name') else ''}
+              </body>
+            </html>
+            """
+            
+            # Create plain text version
+            text_body = f"""
+New OpenFolio Risk Profile Submission
+
+Submission Date: {submission_date}
+
+Profile Details:
+- Market Knowledge: {profile_data.get('marketKnowledge', 'N/A')}
+- Instrument Knowledge: {profile_data.get('instrumentKnowledge', 'N/A')}
+- Fluctuation Tolerance: {profile_data.get('fluctuationTolerance', 'N/A')}
+- Max Annual Loss: {profile_data.get('maxAnnualLoss', 'N/A')}
+- Investment Goal: {profile_data.get('investmentGoal', 'N/A')}
+- Liquidity Need: {profile_data.get('liquidityNeed', 'N/A')}
+- Regular Investment: {profile_data.get('regularInvestment', 'N/A')}
+- Initial Amount: {profile_data.get('initialAmount', 'N/A')} CHF
+- Time Horizon: {profile_data.get('timeHorizon', 'N/A')}
+"""
+            if profile_data.get('email'):
+                text_body += f"- User Email: {profile_data.get('email')}\n"
+            if profile_data.get('name'):
+                text_body += f"- User Name: {profile_data.get('name')}\n"
+            
+            # Attach both versions
+            msg.attach(MIMEText(text_body, 'plain'))
+            msg.attach(MIMEText(html_body, 'html'))
+            
+            # Send email via SMTP
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()  # Enable TLS encryption
+                server.login(smtp_user, smtp_password)
+                # send to all configured recipients
+                server.sendmail(smtp_user, recipient_emails, msg.as_string())
+            
+            app.logger.info(f"Profile submission email sent successfully to: {', '.join(recipient_emails)}")
+            return True
+            
+        except Exception as e:
+            app.logger.error(f"Failed to send profile email: {str(e)}")
+            return False
+    
+    @app.route("/submit-profile", methods=["POST"])
+    def submit_profile():
+        """Handle profile form submissions and send email notification."""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({
+                    "error": {
+                        "message": "No data provided"
+                    }
+                }), 400
+            
+            # Extract profile data
+            profile_data = {
+                'marketKnowledge': data.get('marketKnowledge', ''),
+                'instrumentKnowledge': data.get('instrumentKnowledge', ''),
+                'fluctuationTolerance': data.get('fluctuationTolerance', ''),
+                'maxAnnualLoss': data.get('maxAnnualLoss', ''),
+                'investmentGoal': data.get('investmentGoal', ''),
+                'liquidityNeed': data.get('liquidityNeed', ''),
+                'regularInvestment': data.get('regularInvestment', ''),
+                'initialAmount': data.get('initialAmount', ''),
+                'timeHorizon': data.get('timeHorizon', ''),
+                'email': data.get('email', ''),
+                'name': data.get('name', ''),
+            }
+            
+            # Validate that at least some profile data is present
+            required_fields = ['marketKnowledge', 'instrumentKnowledge', 'fluctuationTolerance', 
+                              'maxAnnualLoss', 'investmentGoal']
+            missing_fields = [field for field in required_fields if not profile_data.get(field)]
+            
+            if missing_fields:
+                return jsonify({
+                    "error": {
+                        "message": f"Missing required fields: {', '.join(missing_fields)}"
+                    }
+                }), 400
+            
+            # Send email
+            email_sent = send_profile_email(profile_data)
+            
+            if email_sent:
+                return jsonify({
+                    "success": True,
+                    "message": "Profile submitted successfully"
+                }), 200
+            else:
+                # Still return success to user, but log the error
+                app.logger.error("Email sending failed but profile data was received")
+                return jsonify({
+                    "success": True,
+                    "message": "Profile received (email notification may have failed)"
+                }), 200
+                
+        except Exception as e:
+            app.logger.error(f"Error in submit_profile: {str(e)}")
+            return jsonify({
+                "error": {
+                    "message": "Internal server error. Please try again later."
+                }
+            }), 500
     
     @app.route('/assets/<path:filename>')
     def serve_assets(filename):
@@ -824,12 +1038,7 @@ def create_app() -> Flask:
 app = create_app()
 
 if __name__ == "__main__":
-    # Optional: load .env if present
-    try:
-        from dotenv import load_dotenv
-        load_dotenv()
-    except ImportError:
-        pass
+    # .env file is already loaded at module level above
 
     # Check if Stripe key is provided
     stripe_key = os.environ.get("STRIPE_SECRET_KEY", "")

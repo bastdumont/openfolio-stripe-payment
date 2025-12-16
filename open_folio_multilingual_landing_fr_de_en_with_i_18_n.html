@@ -802,6 +802,101 @@
         padding: 10px 0;
       }
 
+      /* Risk Profile */
+      .risk-profile {
+        background: var(--white);
+        padding: var(--space-24) 0;
+      }
+
+      .risk-profile-content {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: var(--space-16);
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .risk-profile-text {
+        text-align: left;
+      }
+
+      .risk-profile-text .section-title {
+        text-align: left;
+        margin-bottom: var(--space-6);
+      }
+
+      .risk-profile-text .section-title::after {
+        left: 0;
+        transform: none;
+      }
+
+      .risk-profile-text > p {
+        color: var(--text-secondary);
+        font-size: var(--text-lg);
+        line-height: 1.7;
+        margin-bottom: var(--space-8);
+      }
+
+      .risk-profile-features {
+        list-style: none;
+        margin-bottom: var(--space-8);
+      }
+
+      .risk-profile-features li {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3) 0;
+        color: var(--text-secondary);
+        font-size: var(--text-base);
+      }
+
+      .risk-profile-features li span:first-child {
+        color: var(--primary-yellow);
+        font-weight: 700;
+        font-size: var(--text-lg);
+      }
+
+      .risk-profile-visual {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .risk-profile-card {
+        background: var(--gradient-light);
+        border: 2px solid var(--primary-yellow);
+        border-radius: var(--radius-2xl);
+        padding: var(--space-10) var(--space-8);
+        text-align: center;
+        box-shadow: var(--shadow-xl);
+        max-width: 400px;
+        transition: all var(--transition-base);
+      }
+
+      .risk-profile-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-2xl);
+      }
+
+      .risk-profile-icon {
+        font-size: 4rem;
+        margin-bottom: var(--space-4);
+        filter: grayscale(0.1);
+      }
+
+      .risk-profile-card h3 {
+        font-size: var(--text-2xl);
+        margin-bottom: var(--space-4);
+        color: var(--text-primary);
+      }
+
+      .risk-profile-card p {
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
       /* FAQ */
       .faq {
         background: var(--light-gray);
@@ -958,6 +1053,20 @@
         .about-inner {
           grid-template-columns: 1fr;
           gap: var(--space-8);
+        }
+
+        .risk-profile-content {
+          grid-template-columns: 1fr;
+          gap: var(--space-12);
+        }
+
+        .risk-profile-text .section-title {
+          text-align: center;
+        }
+
+        .risk-profile-text .section-title::after {
+          left: 50%;
+          transform: translateX(-50%);
         }
 
         .card-grid {
@@ -1422,6 +1531,58 @@
       </div>
     </section>
 
+    <!-- Risk Profile -->
+    <section class="risk-profile" id="risk-profile">
+      <div class="container">
+        <div class="risk-profile-content scroll-animate">
+          <div class="risk-profile-text">
+            <h2 class="section-title" data-i18n="risk_profile_title">
+              Déterminez votre profil de risque
+            </h2>
+            <p data-i18n="risk_profile_lead">
+              Avant de commencer, répondez à quelques questions simples pour
+              identifier votre profil d'investisseur. Cela nous aide à vous
+              recommander les portefeuilles les plus adaptés à votre situation et
+              à votre tolérance au risque.
+            </p>
+            <ul class="risk-profile-features">
+              <li>
+                <span>✓</span>
+                <span data-i18n="risk_profile_feat1"
+                  >Évaluation rapide en 5 minutes</span
+                >
+              </li>
+              <li>
+                <span>✓</span>
+                <span data-i18n="risk_profile_feat2"
+                  >Recommandations personnalisées</span
+                >
+              </li>
+              <li>
+                <span>✓</span>
+                <span data-i18n="risk_profile_feat3"
+                  >Compréhension de vos objectifs</span
+                >
+              </li>
+            </ul>
+            <a href="/profile" class="btn" data-i18n="risk_profile_cta"
+              >Commencer le questionnaire</a
+            >
+          </div>
+          <div class="risk-profile-visual">
+            <div class="risk-profile-card">
+              <div class="risk-profile-icon">📊</div>
+              <h3 data-i18n="risk_profile_card_title">Votre Profil</h3>
+              <p data-i18n="risk_profile_card_text">
+                Découvrez quel type d'investisseur vous êtes et quels portefeuilles
+                correspondent le mieux à votre profil.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- FAQ -->
     <section class="faq" id="faq">
       <div class="container">
@@ -1702,6 +1863,16 @@
           pf6: 'Application mobile',
           pf7: 'Résiliation à tout moment',
           pricing_note: 'Sans engagement long terme. Annulation à tout moment.',
+          risk_profile_title: 'Déterminez votre profil de risque',
+          risk_profile_lead:
+            'Avant de commencer, répondez à quelques questions simples pour identifier votre profil d\'investisseur. Cela nous aide à vous recommander les portefeuilles les plus adaptés à votre situation et à votre tolérance au risque.',
+          risk_profile_feat1: 'Évaluation rapide en 5 minutes',
+          risk_profile_feat2: 'Recommandations personnalisées',
+          risk_profile_feat3: 'Compréhension de vos objectifs',
+          risk_profile_cta: 'Commencer le questionnaire',
+          risk_profile_card_title: 'Votre Profil',
+          risk_profile_card_text:
+            'Découvrez quel type d\'investisseur vous êtes et quels portefeuilles correspondent le mieux à votre profil.',
           faq_title: 'Questions fréquentes',
           q1: 'Dois-je lier mon compte bancaire ?',
           a1: `Non. OpenFolio n'exige aucun lien bancaire, ni données financières personnelles. Vous accédez à de l'information qualifiée et vérifiée. Vous suivez des portefeuilles et décidez vous-même d'investir.`,
@@ -1794,6 +1965,16 @@
           pf6: 'Mobile App',
           pf7: 'Jederzeit kündbar',
           pricing_note: 'Keine langfristige Bindung. Jederzeit kündbar.',
+          risk_profile_title: 'Bestimmen Sie Ihr Risikoprofil',
+          risk_profile_lead:
+            'Beantworten Sie vor dem Start einige einfache Fragen, um Ihr Anlegerprofil zu identifizieren. Dies hilft uns, Ihnen die Portfolios zu empfehlen, die am besten zu Ihrer Situation und Ihrer Risikotoleranz passen.',
+          risk_profile_feat1: 'Schnelle Bewertung in 5 Minuten',
+          risk_profile_feat2: 'Personalisierte Empfehlungen',
+          risk_profile_feat3: 'Verständnis Ihrer Ziele',
+          risk_profile_cta: 'Fragebogen starten',
+          risk_profile_card_title: 'Ihr Profil',
+          risk_profile_card_text:
+            'Finden Sie heraus, welcher Anlegertyp Sie sind und welche Portfolios am besten zu Ihrem Profil passen.',
           faq_title: 'Häufige Fragen',
           q1: 'Muss ich mein Bankkonto verknüpfen?',
           a1: 'Nein. OpenFolio erfordert weder Bank‑Link noch persönliche Finanzdaten. Sie erhalten qualifizierte und verifizierte Informationen. Sie folgen den Portfolios und entscheiden selbst.',
@@ -1883,6 +2064,16 @@
           pf6: 'Mobile app access',
           pf7: 'Cancel anytime',
           pricing_note: 'No long‑term commitments. Cancel anytime.',
+          risk_profile_title: 'Determine Your Risk Profile',
+          risk_profile_lead:
+            'Before you start, answer a few simple questions to identify your investor profile. This helps us recommend the portfolios best suited to your situation and risk tolerance.',
+          risk_profile_feat1: 'Quick 5‑minute assessment',
+          risk_profile_feat2: 'Personalized recommendations',
+          risk_profile_feat3: 'Understanding your goals',
+          risk_profile_cta: 'Start the questionnaire',
+          risk_profile_card_title: 'Your Profile',
+          risk_profile_card_text:
+            'Discover what type of investor you are and which portfolios best match your profile.',
           faq_title: 'Frequently asked questions',
           q1: 'Do I need to link my bank account?',
           a1: 'No. OpenFolio requires no bank linking or personal financial data. You access qualified and verified information. You follow the portfolios and decide for yourself.',
