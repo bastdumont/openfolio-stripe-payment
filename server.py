@@ -330,8 +330,52 @@ Profile Details:
         """Basic health check endpoint."""
         return jsonify({"status": "ok", "stripe_configured": bool(stripe.api_key)}), 200
 
+    def get_or_create_tax_rate():
+        """Get or create a Swiss VAT 8.1% tax rate in Stripe.
+        
+        Looks for an existing active tax rate matching Swiss VAT 8.1%.
+        Creates one if not found.
+        
+        Returns:
+            Stripe TaxRate object
+        """
+        try:
+            # Search for existing Swiss VAT tax rate
+            tax_rates = stripe.TaxRate.list(active=True, limit=100)
+            for tr in tax_rates.auto_paging_iter():
+                if (tr.percentage == 8.1 and 
+                    tr.inclusive is False and 
+                    tr.country == 'CH'):
+                    app.logger.info(f"Found existing Swiss VAT tax rate: {tr.id}")
+                    return tr
+        except Exception as e:
+            app.logger.warning(f"Error searching for existing tax rate: {str(e)}")
+        
+        # Create new Swiss VAT tax rate
+        try:
+            tax_rate = stripe.TaxRate.create(
+                display_name="TVA",
+                description="Taxe sur la valeur ajoutée (Suisse)",
+                percentage=8.1,
+                inclusive=False,
+                country="CH",
+                jurisdiction="CH",
+                metadata={
+                    'type': 'swiss_vat',
+                    'created_by': 'openfolio'
+                }
+            )
+            app.logger.info(f"Created Swiss VAT tax rate: {tax_rate.id} (8.1%)")
+            return tax_rate
+        except Exception as e:
+            app.logger.error(f"Error creating tax rate: {str(e)}")
+            raise
+
     def get_or_create_price(portfolio_count, billing_period, base_product_id):
         """Get or create a Stripe price with the correct discount based on portfolio count and billing period.
+        
+        Prices are created at HT (hors taxe / ex-VAT) amounts. Swiss VAT (8.1%)
+        is applied separately via a Stripe TaxRate on the checkout session or subscription.
         
         Args:
             portfolio_count: Number of portfolios (1-4)
@@ -339,7 +383,7 @@ Profile Details:
             base_product_id: The base product ID to use
             
         Returns:
-            Stripe Price object
+            Stripe Price object (amount is HT / ex-VAT)
         """
         # Discount configuration (matches frontend) - all amounts in CHF (HT)
         base_price = Decimal('180.00')  # CHF per portfolio for 6 months (hors TVA)
@@ -370,16 +414,11 @@ Profile Details:
         original_total_ex_vat = original_total_ex_vat.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         discounted_total_ex_vat = discounted_total_ex_vat.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
-        # Apply VAT (TVA 8.1%)
-        vat_amount = (discounted_total_ex_vat * VAT_RATE).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        total_with_vat = (discounted_total_ex_vat + vat_amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        original_total_incl_vat = (original_total_ex_vat * (Decimal('1') + VAT_RATE)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        # Convert HT amount to cents for Stripe (VAT applied separately via TaxRate)
+        amount_cents = int((discounted_total_ex_vat * 100).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
 
-        # Convert to cents for Stripe (amount TTC)
-        amount_cents = int((total_with_vat * 100).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
-
-        # Create lookup key for price identification (include VAT marker to avoid legacy prices)
-        lookup_key = f"openfolio_{billing_period}_{portfolio_count}_portfolios_vat81"
+        # Lookup key for HT prices (distinct from old TTC prices with _vat81 suffix)
+        lookup_key = f"openfolio_{billing_period}_{portfolio_count}_portfolios_ht"
         
         # Try to find existing price with this lookup key
         try:
@@ -415,28 +454,26 @@ Profile Details:
                     'interval_count': interval_count,
                 },
                 lookup_key=lookup_key,
+                transfer_lookup_key=True,
                 metadata={
                     'portfolio_count': str(portfolio_count),
                     'billing_period': billing_period,
+                    'amount_type': 'HT',
                     'original_amount_ex_vat': str(original_total_ex_vat),
-                    'original_amount_incl_vat': str(original_total_incl_vat),
                     'discounted_amount_ex_vat': str(discounted_total_ex_vat),
-                    'vat_rate': str(VAT_RATE),
-                    'vat_amount': str(vat_amount),
-                    'total_amount_incl_vat': str(total_with_vat),
                     'volume_discount': str(volume_discount),
-                    'annual_discount_applied': str(billing_period == 'annual')
+                    'annual_discount_applied': str(billing_period == 'annual'),
+                    'vat_applied_via': 'stripe_tax_rate'
                 },
-                nickname=f"OpenFolio {billing_period.capitalize()} - {portfolio_count} portfolio{'s' if portfolio_count > 1 else ''}"
+                nickname=f"OpenFolio {billing_period.capitalize()} - {portfolio_count} portfolio{'s' if portfolio_count > 1 else ''} (HT)"
             )
             app.logger.info(
-                "Created new price %s for %s portfolios (%s billing) - total TTC: %s CHF (HT: %s CHF, TVA: %s CHF)",
+                "Created new HT price %s for %s portfolios (%s billing) - HT: %s CHF (%s centimes)",
                 price.id,
                 portfolio_count,
                 billing_period,
-                total_with_vat,
                 discounted_total_ex_vat,
-                vat_amount,
+                amount_cents,
             )
             return price
         except Exception as e:
@@ -563,6 +600,9 @@ Profile Details:
                 price = get_or_create_price(portfolio_count, billing_period, base_product_id)
                 price_id = price.id
             
+            # Get Swiss VAT tax rate for subscription
+            tax_rate = get_or_create_tax_rate()
+
             # Check if a customer with this email already exists
             existing_customers = stripe.Customer.list(email=email, limit=1)
             
@@ -584,9 +624,11 @@ Profile Details:
             # Create subscription with payment_behavior=default_incomplete
             # This is Stripe's recommended approach to avoid double charging
             # Stripe will automatically create a PaymentIntent for the first invoice
+            # Tax rate is applied via default_tax_rates so Stripe shows tax on invoices
             subscription = stripe.Subscription.create(
                 customer=customer.id,
                 items=[{"price": price_id}],
+                default_tax_rates=[tax_rate.id],
                 payment_behavior="default_incomplete",  # Creates PaymentIntent automatically
                 collection_method="charge_automatically",  # Force card payment, not invoice payment
                 payment_settings={
@@ -952,8 +994,9 @@ Profile Details:
                     }
                 }), 400
 
-            # Get or create price based on portfolio count and billing period
+            # Get or create price (HT amount) and tax rate
             price = get_or_create_price(portfolio_count, billing_period, base_product_id)
+            tax_rate = get_or_create_tax_rate()
 
             # Check if a customer with this email already exists
             existing_customers = stripe.Customer.list(email=email, limit=1)
@@ -977,13 +1020,14 @@ Profile Details:
             # Vercel provides the host in request headers
             domain = request.headers.get('origin') or request.host_url.rstrip('/')
 
-            # Create Checkout Session
+            # Create Checkout Session with HT price + Swiss VAT tax rate
             checkout_session = stripe.checkout.Session.create(
                 customer=customer.id,
                 mode='subscription',
                 line_items=[{
                     'price': price.id,
                     'quantity': 1,
+                    'tax_rates': [tax_rate.id],
                 }],
                 # Redirect to the App Store page after successful payment
                 # Note: Stripe will interpolate {CHECKOUT_SESSION_ID}, but we don't need it for this redirect
