@@ -1347,7 +1347,6 @@
             <div class="billing-selector">
               <div class="billing-title">Période de facturation</div>
               <div class="billing-toggle">
-                <div class="billing-option" data-billing="monthly">1 mois</div>
                 <div class="billing-option selected" data-billing="biannual">
                   6 mois
                 </div>
@@ -1783,8 +1782,6 @@
         const billingText =
           currentBilling === 'annual'
             ? 'Facturé annuellement'
-            : currentBilling === 'monthly'
-            ? 'Facturé mensuellement'
             : 'Facturé tous les 6 mois';
         billingPeriodElement.textContent = billingText;
       }
