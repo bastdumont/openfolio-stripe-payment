@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenFolio — Guide pratique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08080A;
+  --bg-2:#0D0D11;
+  --panel:rgba(255,255,255,.028);
+  --panel-hi:rgba(255,255,255,.055);
+  --stroke:rgba(255,255,255,.075);
+  --stroke-hi:rgba(255,255,255,.14);
+  --txt:#EBEAEF;
+  --txt-2:#A3A2AE;
+  --txt-3:#71707C;
+  --v:#FEBC5A;
+  --v2:#FFD9A3;
+  --c:#FF8A3D;
+  --pink:#FF7A45;
+  --amber:#FEBC5A;
+  --red:#FF6B6B;
+  --green:#4ADE80;
+  --r:16px;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--txt);
+  font-family:var(--sans);font-size:15px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;overflow-x:hidden;
+}
+
+/* ── Ambient AI background ───────────────────────────── */
+.aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.17;will-change:transform}
+.b1{width:640px;height:640px;background:radial-gradient(circle,#FEBC5A,transparent 65%);top:-220px;left:-140px;animation:drift1 24s ease-in-out infinite}
+.b2{width:560px;height:560px;background:radial-gradient(circle,#FF8A3D,transparent 65%);bottom:-200px;right:-120px;animation:drift2 30s ease-in-out infinite}
+.b3{width:440px;height:440px;background:radial-gradient(circle,#FF7A45,transparent 65%);top:38%;left:52%;opacity:.09;animation:drift3 27s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(120px,80px) scale(1.15)}}
+@keyframes drift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-140px,-70px) scale(1.1)}}
+@keyframes drift3{0%,100%{transform:translate(0,0)}50%{transform:translate(-90px,110px)}}
+.grid-bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 20%,transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 20%,transparent 75%);
+}
+.noise{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.shell{position:relative;z-index:2;display:flex;min-height:100vh}
+
+/* ── Sidebar ─────────────────────────────────────────── */
+aside{
+  width:296px;flex:0 0 296px;height:100vh;position:sticky;top:0;
+  padding:26px 18px;display:flex;flex-direction:column;gap:22px;
+  border-right:1px solid var(--stroke);
+  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.005));
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 6px}
+.mark{
+  width:40px;height:40px;flex:0 0 40px;border-radius:12px;position:relative;
+  background:linear-gradient(135deg,var(--v),var(--c));
+  display:grid;place-items:center;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12),0 8px 28px -8px rgba(254,188,90,.8);
+}
+.mark svg{width:22px;height:22px}
+.mark::after{content:'';position:absolute;inset:-6px;border-radius:16px;
+  background:linear-gradient(135deg,var(--v),var(--c));filter:blur(14px);opacity:.5;z-index:-1;
+  animation:pulseGlow 3.4s ease-in-out infinite}
+@keyframes pulseGlow{0%,100%{opacity:.35}50%{opacity:.7}}
+.brand h1{margin:0;font-size:15px;font-weight:600;letter-spacing:-.2px}
+.brand span{display:block;font-size:11px;color:var(--txt-3);font-weight:400;letter-spacing:.4px;text-transform:uppercase}
+
+/* progress ring */
+.progress-card{
+  border:1px solid var(--stroke);border-radius:14px;padding:14px;
+  background:var(--panel);display:flex;align-items:center;gap:14px;
+}
+.ring{width:52px;height:52px;flex:0 0 52px;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:5;stroke-linecap:round}
+.ring .bgc{stroke:rgba(255,255,255,.08)}
+.ring .fgc{stroke:url(#grad);stroke-dasharray:138.2;stroke-dashoffset:138.2;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:600;font-family:var(--mono)}
+.progress-card p{margin:0;font-size:12px;color:var(--txt-3);line-height:1.45}
+.progress-card p strong{display:block;color:var(--txt-2);font-size:12.5px;font-weight:500}
+
+nav{display:flex;flex-direction:column;gap:4px}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--txt-3);padding:0 12px 6px;font-weight:600}
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;
+  cursor:pointer;color:var(--txt-2);font-size:13.5px;font-weight:500;
+  border:1px solid transparent;transition:all .22s cubic-bezier(.4,0,.2,1);position:relative;
+  user-select:none;
+}
+.nav-item .idx{
+  width:22px;height:22px;flex:0 0 22px;border-radius:7px;display:grid;place-items:center;
+  font-size:11px;font-family:var(--mono);background:rgba(255,255,255,.05);
+  border:1px solid var(--stroke);color:var(--txt-3);transition:all .22s;
+}
+.nav-item:hover{background:var(--panel-hi);color:var(--txt);transform:translateX(2px)}
+.nav-item.on{
+  background:linear-gradient(90deg,rgba(254,188,90,.18),rgba(255,138,61,.06));
+  border-color:rgba(254,188,90,.35);color:#fff;
+}
+.nav-item.on .idx{background:linear-gradient(135deg,var(--v),var(--c));color:#1A1409;font-weight:600;border-color:transparent;box-shadow:0 0 14px -2px rgba(254,188,90,.8)}
+.nav-item .dot{margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--green);opacity:0;transition:opacity .3s}
+.nav-item.done .dot{opacity:1;box-shadow:0 0 8px var(--green)}
+
+.side-foot{margin-top:auto;font-size:11px;color:var(--txt-3);padding:0 8px;display:flex;align-items:center;gap:8px}
+.live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 8px var(--green)}50%{opacity:.3;box-shadow:none}}
+
+/* ── Main ────────────────────────────────────────────── */
+main{flex:1;min-width:0;padding:56px 56px 100px;max-width:1040px}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:1.4px;
+  text-transform:uppercase;font-weight:600;color:var(--v2);
+  border:1px solid rgba(254,188,90,.3);background:rgba(254,188,90,.08);
+  padding:5px 12px;border-radius:999px;margin-bottom:18px;
+}
+.eyebrow::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--v2);box-shadow:0 0 8px var(--v2)}
+h2{
+  font-size:38px;line-height:1.15;letter-spacing:-1.4px;font-weight:600;margin:0 0 14px;
+  background:linear-gradient(120deg,#fff 20%,#FFD79A 55%,#FFA45C 90%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.lede{font-size:16.5px;color:var(--txt-2);max-width:70ch;margin:0 0 40px;font-weight:300}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:1.4px;color:var(--txt-3);font-weight:600;margin:52px 0 18px;display:flex;align-items:center;gap:12px}
+h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--stroke),transparent)}
+
+section{display:none}
+section.on{display:block}
+.rise{opacity:0;transform:translateY(14px);animation:rise .55s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:14px}
+.card{
+  position:relative;border:1px solid var(--stroke);border-radius:var(--r);padding:20px;
+  background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  transition:transform .3s cubic-bezier(.16,1,.3,1),border-color .3s,background .3s;
+  overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;inset:0;border-radius:var(--r);opacity:0;transition:opacity .35s;
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),rgba(254,188,90,.16),transparent 42%);
+}
+.card:hover{transform:translateY(-4px);border-color:var(--stroke-hi);background:var(--panel-hi)}
+.card:hover::before{opacity:1}
+.chip{
+  width:36px;height:36px;border-radius:11px;display:grid;place-items:center;margin-bottom:14px;
+  background:linear-gradient(135deg,rgba(254,188,90,.24),rgba(255,138,61,.16));
+  border:1px solid rgba(254,188,90,.3);
+}
+.chip svg{width:18px;height:18px;stroke:var(--v2)}
+.card h4{margin:0 0 6px;font-size:14.5px;font-weight:600;letter-spacing:-.2px}
+.card p{margin:0;font-size:13.2px;color:var(--txt-2);line-height:1.6;font-weight:300}
+.card .tag{position:absolute;top:16px;right:16px;font-family:var(--mono);font-size:10px;color:var(--txt-3);letter-spacing:.5px}
+
+/* checklist */
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{
+  display:flex;gap:16px;padding:18px 20px;border-radius:var(--r);cursor:pointer;
+  border:1px solid var(--stroke);background:var(--panel);
+  transition:all .28s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden;
+}
+.step:hover{border-color:var(--stroke-hi);background:var(--panel-hi);transform:translateX(3px)}
+.step::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,var(--v),var(--c));transform:scaleY(0);transform-origin:top;
+  transition:transform .35s cubic-bezier(.16,1,.3,1);
+}
+.step.ok::after{transform:scaleY(1)}
+.step.ok{background:rgba(254,188,90,.05);border-color:rgba(254,188,90,.24)}
+.box{
+  width:22px;height:22px;flex:0 0 22px;border-radius:7px;margin-top:2px;
+  border:1.5px solid var(--stroke-hi);display:grid;place-items:center;
+  transition:all .28s cubic-bezier(.16,1,.3,1);background:rgba(0,0,0,.2);
+}
+.step.ok .box{background:linear-gradient(135deg,var(--v),var(--c));border-color:transparent;box-shadow:0 0 16px -2px rgba(254,188,90,.9)}
+.box svg{width:13px;height:13px;stroke:#1A1409;stroke-width:3;fill:none;
+  stroke-dasharray:32;stroke-dashoffset:32;transition:stroke-dashoffset .3s ease .08s}
+.step.ok .box svg{stroke-dashoffset:0}
+.step-body{flex:1;min-width:0}
+.step-title{font-size:14px;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:10px;letter-spacing:-.1px}
+.step-num{font-family:var(--mono);font-size:10.5px;color:var(--v2);background:rgba(254,188,90,.12);
+  border:1px solid rgba(254,188,90,.25);padding:1px 7px;border-radius:6px;letter-spacing:.5px}
+.step.ok .step-title{color:var(--txt-3);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.2)}
+.step-desc{font-size:13.2px;color:var(--txt-2);font-weight:300;line-height:1.6}
+.step.ok .step-desc{color:var(--txt-3)}
+
+code{
+  font-family:var(--mono);font-size:12.2px;padding:2px 7px;border-radius:6px;
+  background:rgba(254,188,90,.11);border:1px solid rgba(254,188,90,.2);color:#FFDCA8;white-space:nowrap;
+}
+pre{
+  font-family:var(--mono);font-size:12.3px;background:rgba(0,0,0,.42);border:1px solid var(--stroke);
+  border-radius:10px;padding:13px 15px;margin:11px 0 0;overflow-x:auto;color:#FFCF8A;line-height:1.6;
+}
+pre code{background:none;border:none;padding:0;color:inherit;white-space:pre}
+
+/* alerts */
+.alert{
+  display:flex;gap:15px;padding:18px 20px;border-radius:var(--r);margin-bottom:12px;
+  border:1px solid var(--stroke);background:var(--panel);position:relative;overflow:hidden;
+}
+.alert::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px}
+.alert .ico{width:32px;height:32px;flex:0 0 32px;border-radius:9px;display:grid;place-items:center}
+.alert .ico svg{width:16px;height:16px;stroke-width:2;fill:none}
+.alert h4{margin:0 0 5px;font-size:14px;font-weight:600;letter-spacing:-.1px}
+.alert p{margin:0;font-size:13.2px;color:var(--txt-2);font-weight:300;line-height:1.6}
+.a-red::before{background:var(--red)}.a-red .ico{background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.28)}.a-red .ico svg{stroke:var(--red)}.a-red h4{color:var(--red)}
+.a-amb::before{background:var(--amber)}.a-amb .ico{background:rgba(254,188,90,.12);border:1px solid rgba(254,188,90,.28)}.a-amb .ico svg{stroke:var(--amber)}.a-amb h4{color:var(--amber)}
+.a-grn::before{background:var(--green)}.a-grn .ico{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.28)}.a-grn .ico svg{stroke:var(--green)}.a-grn h4{color:var(--green)}
+
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:26px 0 6px;font-size:12px;font-family:var(--mono);color:var(--txt-3)}
+.flow b{padding:6px 12px;border-radius:9px;border:1px solid var(--stroke);background:var(--panel);color:var(--txt-2);font-weight:400;transition:all .2s}
+.flow b[data-tab]{cursor:pointer}
+.flow b[data-tab]:hover{border-color:rgba(254,188,90,.5);background:rgba(254,188,90,.12);color:#FFDCA8}
+.flow i{color:var(--v2);font-style:normal}
+
+.foot-note{margin-top:26px;padding:16px 20px;border-radius:var(--r);border:1px dashed var(--stroke-hi);
+  font-size:13px;color:var(--txt-2);font-weight:300;background:rgba(255,255,255,.015)}
+
+.kbd{font-family:var(--mono);font-size:10.5px;border:1px solid var(--stroke-hi);border-bottom-width:2px;
+  border-radius:5px;padding:1px 6px;color:var(--txt-3);background:rgba(255,255,255,.04)}
+
+/* mobile */
+.mobile-bar{display:none}
+
+/* ── Liens Drive / onglets ───────────────────────────── */
+a{color:inherit}
+code a,a.tab{color:inherit;text-decoration:none}
+.tab{
+  display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:12.2px;
+  padding:2px 7px 2px 8px;border-radius:6px;background:rgba(254,188,90,.11);
+  border:1px solid rgba(254,188,90,.22);color:#FFDCA8;white-space:nowrap;
+  text-decoration:none;transition:all .18s;cursor:pointer;
+}
+.tab:hover{background:rgba(254,188,90,.2);border-color:rgba(254,188,90,.5);color:#FFF0D6}
+.tab svg{width:9px;height:9px;stroke:currentColor;stroke-width:2.2;fill:none;opacity:.55;flex:0 0 9px}
+.tab:hover svg{opacity:1}
+
+.res{display:flex;flex-direction:column;gap:5px;padding-top:2px}
+.res a{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;
+  font-size:12.8px;color:var(--txt-2);text-decoration:none;border:1px solid var(--stroke);
+  background:var(--panel);transition:all .22s cubic-bezier(.4,0,.2,1);
+}
+.res a:hover{background:var(--panel-hi);border-color:rgba(254,188,90,.4);color:var(--txt);transform:translateX(2px)}
+.res a svg{width:15px;height:15px;flex:0 0 15px;stroke:var(--v);stroke-width:1.8;fill:none}
+.res a .ext{margin-left:auto;width:11px;height:11px;flex:0 0 11px;stroke:var(--txt-3);opacity:.7}
+
+.files{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:9px;margin-top:4px}
+.files a{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;
+  border:1px solid var(--stroke);background:var(--panel);text-decoration:none;
+  color:var(--txt-2);font-size:13px;transition:all .25s cubic-bezier(.16,1,.3,1);
+}
+.files a:hover{border-color:rgba(254,188,90,.42);background:var(--panel-hi);color:var(--txt);transform:translateY(-2px)}
+.files a b{font-weight:500;letter-spacing:-.1px}
+.files a small{display:block;font-size:11px;color:var(--txt-3);font-weight:300;letter-spacing:.1px}
+.files a .fi{width:30px;height:30px;flex:0 0 30px;border-radius:9px;display:grid;place-items:center;
+  background:rgba(254,188,90,.1);border:1px solid rgba(254,188,90,.22)}
+.files a .fi svg{width:15px;height:15px;stroke:var(--v);stroke-width:1.8;fill:none}
+
+
+@media(max-width:940px){
+  aside{display:none}
+  main{padding:22px 20px 90px;max-width:100%}
+  h2{font-size:28px;letter-spacing:-1px}
+  .lede{font-size:15px;margin-bottom:28px}
+  .mobile-bar{
+    display:flex;position:sticky;top:0;z-index:20;gap:8px;overflow-x:auto;
+    padding:14px 20px;margin:-22px -20px 22px;
+    background:rgba(8,8,10,.86);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--stroke);scrollbar-width:none;
+  }
+  .mobile-bar::-webkit-scrollbar{display:none}
+  .mobile-bar .nav-item{white-space:nowrap;padding:8px 14px;font-size:12.5px;border:1px solid var(--stroke)}
+  .mobile-bar .nav-item .idx{display:none}
+  .m-prog{display:flex!important}
+}
+.m-prog{
+  display:none;align-items:center;gap:8px;white-space:nowrap;margin-left:auto;
+  padding:8px 12px;border-radius:11px;border:1px solid rgba(254,188,90,.3);
+  background:rgba(254,188,90,.1);font-family:var(--mono);font-size:11.5px;color:var(--v2);
+}
+.m-prog .bar{width:44px;height:4px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}
+.m-prog .bar i{display:block;height:100%;width:0;border-radius:4px;
+  background:linear-gradient(90deg,var(--v),var(--c));transition:width .5s cubic-bezier(.4,0,.2,1)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:9px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.18)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:11px;
+  font:inherit;font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap;
+  border:1px solid rgba(254,188,90,.35);background:rgba(254,188,90,.11);color:#FFDCA8;transition:all .2s}
+.btn:hover{background:rgba(254,188,90,.2);border-color:rgba(254,188,90,.6)}
+/* ── Ajouts v8 : lisibilité ─────────────────────────── */
+.lede strong{color:var(--txt);font-weight:500}
+p.body{font-size:14px;color:var(--txt-2);font-weight:300;line-height:1.7;max-width:72ch;margin:0 0 14px}
+p.body b{color:var(--txt);font-weight:500}
+
+/* Cartes « Par où commencer » */
+.start{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.start .card{cursor:pointer}
+.start .card .go{margin-top:12px;font-size:12px;font-family:var(--mono);color:var(--v2)}
+.start .card:hover .go{color:#fff}
+
+/* Badges « qui écrit » */
+.who{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-family:var(--mono);
+  padding:2px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.2px}
+.who::before{content:'';width:6px;height:6px;border-radius:50%}
+.w-you{color:#FFDCA8;background:rgba(254,188,90,.12);border:1px solid rgba(254,188,90,.35)}
+.w-you::before{background:var(--v)}
+.w-new{color:#FFC59E;background:rgba(255,138,61,.1);border:1px solid rgba(255,138,61,.32)}
+.w-new::before{background:var(--c)}
+.w-auto{color:var(--txt-3);background:rgba(255,255,255,.04);border:1px solid var(--stroke)}
+.w-auto::before{background:var(--txt-3)}
+.w-app{color:#9FE8B9;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.28)}
+.w-app::before{background:var(--green)}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 18px}
+
+/* Tableaux lisibles */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--stroke);border-radius:var(--r);background:var(--panel)}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--txt-3);
+  font-weight:600;padding:12px 14px;border-bottom:1px solid var(--stroke);white-space:nowrap}
+table.t td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.045);color:var(--txt-2);
+  vertical-align:top;font-weight:300;line-height:1.55}
+table.t tr:last-child td{border-bottom:none}
+table.t td:first-child{white-space:nowrap}
+table.t td b{color:var(--txt);font-weight:500}
+table.t.sheet td,table.t.sheet th{font-family:var(--mono);font-size:12px;white-space:nowrap}
+table.t.sheet th{text-transform:none;letter-spacing:0;color:var(--v2);background:rgba(254,188,90,.06)}
+table.t.sheet td{color:var(--txt)}
+.caption{font-size:12px;color:var(--txt-3);margin:8px 2px 0;font-weight:300}
+
+/* Types d'opération */
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.type{border:1px solid var(--stroke);border-radius:var(--r);padding:16px 18px;background:var(--panel)}
+.type h4{margin:0 0 4px;font-size:14px;font-family:var(--mono);color:var(--v2);font-weight:500}
+.type p{margin:0;font-size:13px;color:var(--txt-2);font-weight:300;line-height:1.6}
+.type ul{margin:8px 0 0;padding-left:18px;font-size:12.5px;color:var(--txt-3);font-weight:300;line-height:1.7}
+
+/* Bloc « Vérifier » dans une étape */
+.check{margin-top:10px;padding:9px 12px;border-radius:10px;font-size:12.5px;font-weight:300;
+  color:var(--txt-2);background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.2)}
+.check b{color:var(--green);font-weight:500}
+.where{display:block;margin-bottom:6px}
+
+.next{display:flex;justify-content:flex-end;margin-top:30px}
+.next .btn{margin-left:0}
+
+</style>
+</head>
+<body>
+<div class="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="grid-bg"></div>
+<div class="noise"></div>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#FEBC5A"/><stop offset="100%" stop-color="#FF8A3D"/>
+  </linearGradient>
+</defs></svg>
+
+<div class="shell">
+<aside>
+  <div class="brand">
+    <div class="mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#1A1409" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 17l5-5 4 3 6-7"/><path d="M14 8h5v5"/>
+      </svg>
+    </div>
+    <div>
+      <h1>OpenFolio</h1>
+      <span>Guide pratique</span>
+    </div>
+  </div>
+
+  <div class="progress-card">
+    <div class="ring">
+      <svg width="52" height="52"><circle class="bgc" cx="26" cy="26" r="22"/><circle class="fgc" id="ringFg" cx="26" cy="26" r="22"/></svg>
+      <b id="ringTxt">0%</b>
+    </div>
+    <p><strong>Ta progression</strong><span id="progSub">0 / 0 étapes cochées</span></p>
+  </div>
+
+  <nav id="nav">
+    <div class="nav-label">Le guide</div>
+  </nav>
+
+  <div class="nav-label" style="padding-top:14px">Raccourcis</div>
+  <div class="res">
+    <a id="lnkSheet" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+      TechnoPortfolio
+      <svg class="ext" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg>
+    </a>
+    <a id="lnkFormSide" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+      Formulaire de saisie
+      <svg class="ext" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg>
+    </a>
+    <a id="lnkDrive" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 002-2V8a2 2 0 00-2-2h-7.9a2 2 0 01-1.7-.9l-.9-1.2A2 2 0 008.8 3H4a2 2 0 00-2 2v13a2 2 0 002 2z"/></svg>
+      Dossier Drive OpenFolio
+      <svg class="ext" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg>
+    </a>
+  </div>
+
+  <div class="side-foot"><span class="kbd">1</span>–<span class="kbd">6</span> pour naviguer</div>
+</aside>
+
+<main>
+  <div class="mobile-bar" id="mobileNav"></div>
+
+  <!-- 1 ─ Par où commencer -->
+  <section id="s-start" class="on">
+    <div class="rise">
+      <div class="eyebrow">Bienvenue</div>
+      <h2>Que veux-tu faire&nbsp;?</h2>
+      <p class="lede">Chaque portefeuille OpenFolio est un fichier Google Sheets. Tu y notes tes opérations, le fichier calcule tout le reste et l'app l'affiche. Choisis ce que tu veux faire, le guide t'emmène à la bonne page.</p>
+    </div>
+
+    <div class="start">
+      <div class="card rise" style="animation-delay:.06s" data-go="op">
+        <span class="tag">LE PLUS COURANT</span>
+        <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></div>
+        <h4>J'ai acheté, vendu ou reçu un dividende</h4>
+        <p>Sur un titre déjà présent dans le portefeuille. Une ligne à ajouter, c'est tout.</p>
+        <div class="go">→ Saisir une opération · 2 min</div>
+      </div>
+      <div class="card rise" style="animation-delay:.1s" data-go="ticker">
+        <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <h4>J'achète un titre jamais détenu</h4>
+        <p>Une nouvelle action, un nouvel ETF ou une nouvelle crypto dans ce portefeuille.</p>
+        <div class="go">→ Ajouter un titre · 10 min</div>
+      </div>
+      <div class="card rise" style="animation-delay:.14s" data-go="clone">
+        <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></div>
+        <h4>Je crée un nouveau portefeuille</h4>
+        <p>Un portefeuille séparé, par exemple pour une famille ou une nouvelle stratégie.</p>
+        <div class="go">→ Créer un portefeuille · 30 min</div>
+      </div>
+      <div class="card rise" style="animation-delay:.18s" data-go="help">
+        <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3M12 17h.01"/></svg></div>
+        <h4>Quelque chose ne s'affiche pas bien</h4>
+        <p>Un #N/A, un titre absent, une courbe qui n'avance plus.</p>
+        <div class="go">→ Règles d'or &amp; dépannage</div>
+      </div>
+    </div>
+
+    <div class="alert a-grn rise" style="margin-top:26px;animation-delay:.22s">
+      <div class="ico"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+      <div><h4>Première fois&nbsp;?</h4><p>Lis d'abord <a href="#" data-go="how" style="color:var(--green)">Comment ça marche</a> (3 minutes). Tu sauras quels onglets tu remplis et lesquels tu ne touches jamais.</p></div>
+    </div>
+  </section>
+
+  <!-- 2 ─ Comment ça marche -->
+  <section id="s-how">
+    <div class="rise">
+      <div class="eyebrow">Les bases</div>
+      <h2>Comment ça marche</h2>
+      <p class="lede">Retiens une seule idée&nbsp;: <strong>tu écris dans très peu d'onglets, et le fichier calcule tout le reste.</strong> Si tu modifies un onglet calculé, tu casses les formules.</p>
+    </div>
+
+    <h3 class="rise" style="animation-delay:.04s">Le trajet d'une opération</h3>
+    <div class="flow rise" style="animation-delay:.06s">
+      <b data-tab="Transactions">Transactions</b><i>→</i><b data-tab="Prices">Prices</b><i>→</i><b data-tab="Engine">Engine</b><i>→</i><b data-tab="Essentials">Essentials</b><i>→</i><b data-tab="Composition">Composition</b><i>→</i><b>App OpenFolio</b>
+    </div>
+    <p class="body rise" style="animation-delay:.08s">Tu notes un achat dans <code>Transactions</code>. <code>Prices</code> récupère le cours du jour. <code>Engine</code> et <code>Essentials</code> calculent combien tu détiens, ce que ça t'a coûté et ce que ça vaut. <code>Composition</code> en fait la répartition en %. Chaque soir, un script ajoute la valeur totale du jour dans <code>Evolution</code> pour dessiner la courbe. L'app lit le résultat.</p>
+
+    <h3 class="rise" style="animation-delay:.1s">Les onglets, un par un</h3>
+    <div class="legend rise" style="animation-delay:.12s">
+      <span class="who w-you">Tu écris ici</span>
+      <span class="who w-new">Seulement pour un nouveau titre</span>
+      <span class="who w-auto">Automatique — ne pas toucher</span>
+      <span class="who w-app">Lu par l'app</span>
+    </div>
+    <div class="tbl-wrap rise" style="animation-delay:.14s">
+      <table class="t">
+        <thead><tr><th>Onglet</th><th>À quoi il sert</th><th>Tu y touches&nbsp;?</th></tr></thead>
+        <tbody>
+          <tr><td><code>Transactions</code></td><td>Le journal de toutes tes opérations&nbsp;: versements, achats, ventes, dividendes. <b>C'est la seule source de vérité.</b></td><td><span class="who w-you">À chaque opération</span></td></tr>
+          <tr><td><code>Prices</code></td><td>Le cours de chaque titre, mis à jour automatiquement depuis Google Finance.</td><td><span class="who w-new">Nouveau titre</span></td></tr>
+          <tr><td><code>Engine</code></td><td>Le moteur de calcul&nbsp;: une ligne par titre avec les quantités, le coût moyen (PRU) et la valeur.</td><td><span class="who w-new">Nouveau titre</span></td></tr>
+          <tr><td><code>Essentials</code></td><td>La fiche de chaque position&nbsp;: nombre de parts, prix d'achat, valeur en CHF, rendement.</td><td><span class="who w-auto">Jamais</span></td></tr>
+          <tr><td><code>Composition</code></td><td>La répartition du portefeuille en % avec les logos.</td><td><span class="who w-auto">Jamais</span></td></tr>
+          <tr><td><code>Evolution</code></td><td>Une ligne par jour avec la valeur totale. Remplie chaque soir par le script.</td><td><span class="who w-auto">Jamais</span> <span style="font-size:12px;color:var(--txt-3)">sauf création d'un portefeuille</span></td></tr>
+          <tr><td><code>News</code></td><td>Les articles affichés dans l'app&nbsp;: Date, Title, URL.</td><td><span class="who w-you">Si tu veux partager un article</span></td></tr>
+          <tr><td><code>TestJSON</code></td><td>Le résumé du portefeuille que l'app lit.</td><td><span class="who w-app">Lu par l'app</span></td></tr>
+          <tr><td style="white-space:normal">Clients, CSV, Yahoo dump, Yahoo Update, Cours Historiques, CompoInit, Intro, Python</td><td>Onglets techniques (accès, historique des cours, imports).</td><td><span class="who w-auto">Jamais</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="rise" style="animation-delay:.16s">Les fichiers du dossier Drive</h3>
+    <p class="body rise" style="animation-delay:.18s"><b>Un fichier = un portefeuille.</b> Les portefeuilles ne se mélangent jamais. Pour les autres fichiers, tu n'as rien à faire&nbsp;: ils servent au fonctionnement de l'app.</p>
+    <div class="files rise" style="animation-delay:.2s" id="filesGrid"></div>
+
+    <h3 class="rise" style="animation-delay:.22s">Petit lexique</h3>
+    <div class="tbl-wrap rise" style="animation-delay:.24s">
+      <table class="t">
+        <tbody>
+          <tr><td><b>Symbole</b> (ticker)</td><td>Le code court d'un titre, par exemple <code>PLTR</code> pour Palantir ou <code>SMHV.SW</code> pour un ETF coté à la bourse suisse.</td></tr>
+          <tr><td><b>PRU</b></td><td>Prix de revient unitaire&nbsp;: le prix moyen payé par part, tous achats confondus.</td></tr>
+          <tr><td><b>Rate</b></td><td>Dans <code>Transactions</code>, le prix d'une part au moment de l'opération.</td></tr>
+          <tr><td><b>Déclencheur</b></td><td>Le réglage Google qui lance chaque soir le script de la courbe <code>Evolution</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="next"><button class="btn" data-go="op">Suivant&nbsp;: saisir une opération →</button></div>
+  </section>
+
+  <!-- 3 ─ Saisir une opération -->
+  <section id="s-op">
+    <div class="rise">
+      <div class="eyebrow">Au quotidien</div>
+      <h2>Saisir une opération</h2>
+      <p class="lede">Pour un titre <strong>déjà présent</strong> dans le portefeuille, une seule chose à faire&nbsp;: ajouter une ligne dans <code>Transactions</code>. Le reste se met à jour tout seul.</p>
+    </div>
+
+    <h3 class="rise" style="animation-delay:.04s">Deux façons de saisir</h3>
+    <div class="grid">
+      <div class="card rise" style="animation-delay:.06s">
+        <span class="tag">RECOMMANDÉ</span>
+        <h4>Le formulaire</h4>
+        <p>Ouvre le <a class="tab" id="lnkForm" href="#" target="_blank" rel="noopener">formulaire New Transaction<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14L21 3"/><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/></svg></a>. Il écrit la ligne au bon endroit, sans risque de laisser une ligne vide ou de toucher une formule.</p>
+      </div>
+      <div class="card rise" style="animation-delay:.08s">
+        <h4>À la main dans le fichier</h4>
+        <p>Ouvre l'onglet <code>Transactions</code>, va à la <b style="color:var(--txt);font-weight:500">première ligne vide juste sous la dernière opération</b> et remplis les colonnes comme dans l'exemple ci-dessous.</p>
+      </div>
+    </div>
+
+    <h3 class="rise" style="animation-delay:.1s">Exemple&nbsp;: achat de 30 actions GFS à 81,35 $</h3>
+    <div class="tbl-wrap rise" style="animation-delay:.12s">
+      <table class="t sheet">
+        <thead><tr><th>Date</th><th>Type</th><th>Symbol</th><th>Ammount</th><th>Commentaire</th><th>Shares</th><th>Rate</th></tr></thead>
+        <tbody><tr><td>5/22/2026</td><td>BUY</td><td>GFS</td><td>2440.50</td><td>Achat 30 actions</td><td>30</td><td>81.35</td></tr></tbody>
+      </table>
+    </div>
+    <p class="caption rise" style="animation-delay:.13s">La colonne s'appelle bien « Ammount » (avec deux m)&nbsp;: ne la renomme pas, l'app s'en sert.</p>
+
+    <div class="tbl-wrap rise" style="margin-top:16px;animation-delay:.14s">
+      <table class="t">
+        <thead><tr><th>Colonne</th><th>Quoi mettre</th></tr></thead>
+        <tbody>
+          <tr><td><b>Date</b></td><td>La date de l'opération, <b>au format du fichier&nbsp;: mois/jour/année</b>. Le 22 mai 2026 s'écrit <code>5/22/2026</code>, et non 22.05.2026.</td></tr>
+          <tr><td><b>Type</b></td><td>Un de ces quatre mots, <b>en majuscules, sans espace</b>&nbsp;: <code>DEPOSIT</code>, <code>BUY</code>, <code>SELL</code>, <code>DIVIDEND</code>.</td></tr>
+          <tr><td><b>Symbol</b></td><td>Le symbole exact, écrit comme dans les lignes précédentes du même titre (<code>PLTR</code>, <code>SMHV.SW</code>, <code>BTC-USD</code>…).</td></tr>
+          <tr><td><b>Ammount</b></td><td>Le montant total de l'opération, dans la devise du titre&nbsp;: <b>Shares × Rate</b>. Ici 30 × 81,35 = 2440,50.</td></tr>
+          <tr><td><b>Commentaire</b></td><td>Libre, pour toi&nbsp;: «&nbsp;Achat 30 actions&nbsp;», «&nbsp;Dividende T3&nbsp;»…</td></tr>
+          <tr><td><b>Shares</b></td><td>Le nombre de parts achetées ou vendues. Toujours un nombre positif, même pour une vente.</td></tr>
+          <tr><td><b>Rate</b></td><td>Le prix d'une part au moment de l'opération.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="rise" style="animation-delay:.16s">Les quatre types d'opération</h3>
+    <div class="types">
+      <div class="type rise" style="animation-delay:.18s"><h4>DEPOSIT</h4><p>Tu verses de l'argent sur le portefeuille.</p><ul><li>Ammount = montant versé</li><li>Shares et Rate vides</li><li>Symbol&nbsp;: comme les DEPOSIT déjà présents dans le fichier</li></ul></div>
+      <div class="type rise" style="animation-delay:.2s"><h4>BUY</h4><p>Tu achètes des parts. Le cash diminue, la position augmente.</p><ul><li>Shares, Rate et Ammount remplis</li></ul></div>
+      <div class="type rise" style="animation-delay:.22s"><h4>SELL</h4><p>Tu vends des parts. La position diminue, le cash augmente.</p><ul><li>Shares positif (le Type suffit à dire que c'est une vente)</li></ul></div>
+      <div class="type rise" style="animation-delay:.24s"><h4>DIVIDEND</h4><p>Tu reçois un dividende sur un titre détenu.</p><ul><li>Ammount = montant reçu</li><li>Shares et Rate vides</li></ul></div>
+    </div>
+
+    <div class="alert a-amb rise" style="margin-top:22px;animation-delay:.26s">
+      <div class="ico"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+      <div><h4>Split, reverse split, fusion, changement de symbole</h4><p>Ces événements changent le nombre de parts ou le symbole d'un titre. Ne les saisis pas toi-même&nbsp;: préviens Balder, qui fera la correction pour que l'historique reste juste.</p></div>
+    </div>
+
+    <div class="check rise" style="animation-delay:.28s"><b>Comment vérifier&nbsp;:</b> après la saisie, ouvre <code>Essentials</code>. Le nombre de parts (Shares) du titre doit avoir changé. Après un DIVIDEND ou un DEPOSIT, c'est le cash qui change.</div>
+    <div class="next"><button class="btn" data-go="ticker">Suivant&nbsp;: ajouter un titre →</button></div>
+  </section>
+
+  <!-- 4 ─ Ajouter un titre -->
+  <section id="s-ticker">
+    <div class="rise">
+      <div class="eyebrow">Nouveau titre</div>
+      <h2>Ajouter un titre jamais détenu</h2>
+      <p class="lede">Le fichier ne connaît pas encore ce titre&nbsp;: il faut lui dire où trouver son cours (<code>Prices</code>) et comment le calculer (<code>Engine</code>), en plus de noter l'achat. Coche chaque étape au fur et à mesure.</p>
+    </div>
+    <div class="steps" data-track="ticker">
+      <div class="step rise" style="animation-delay:.06s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">01</span> Trouver les deux codes du titre</div>
+          <div class="step-desc">Il te faut deux codes&nbsp;:
+            <span class="where">• le <b style="color:var(--txt);font-weight:500">symbole</b>, comme sur Yahoo Finance (ex. <code>AAPL</code>, <code>SMHV.SW</code>)&nbsp;;</span>
+            <span class="where">• le <b style="color:var(--txt);font-weight:500">code Google Finance</b>&nbsp;: la bourse, deux-points, le symbole.</span>
+            <div class="tbl-wrap" style="margin-top:10px">
+              <table class="t">
+                <thead><tr><th>Bourse</th><th>Code Google Finance</th></tr></thead>
+                <tbody>
+                  <tr><td>Nasdaq (US)</td><td><code>NASDAQ:AAPL</code></td></tr>
+                  <tr><td>New York Stock Exchange</td><td><code>NYSE:BABA</code></td></tr>
+                  <tr><td>SIX Swiss Exchange</td><td><code>SWX:NESN</code></td></tr>
+                  <tr><td>Euronext Paris</td><td><code>EPA:MC</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="check"><b>Astuce&nbsp;:</b> tape <code>=GOOGLEFINANCE("NASDAQ:AAPL"; "price")</code> dans une cellule vide. Si un prix s'affiche, le code est bon. Si tu vois <code>#N/A</code>, essaie une autre bourse. Efface ensuite la cellule.</div>
+          </div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.1s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">02</span> Noter l'achat</div>
+          <div class="step-desc">Ajoute la ligne <code>BUY</code> dans <code>Transactions</code>, exactement comme pour <a href="#" data-go="op" style="color:var(--v2)">une opération normale</a>, avec le nouveau symbole.</div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.14s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">03</span> Brancher le cours dans Prices</div>
+          <div class="step-desc">Dans <code>Prices</code>&nbsp;:
+            <span class="where">1. sélectionne la dernière ligne remplie (clic sur son numéro à gauche) et copie-la&nbsp;;</span>
+            <span class="where">2. colle-la sur la ligne juste en dessous&nbsp;;</span>
+            <span class="where">3. remplace l'ancien symbole par le nouveau, et dans la formule de cours, l'ancien code Google Finance par le nouveau&nbsp;:</span>
+            <pre><code>=GOOGLEFINANCE("NASDAQ:AAPL"; "price")</code></pre>
+            <div class="check"><b>Vérifier&nbsp;:</b> un prix s'affiche sur la nouvelle ligne, pas <code>#N/A</code>.</div>
+          </div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.18s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">04</span> Ajouter le titre au moteur de calcul</div>
+          <div class="step-desc">Dans <code>Engine</code>&nbsp;:
+            <span class="where">1. fais un clic droit sur le numéro d'une ligne de titre existante (ex. <code>TSLA</code>) → <em>Insérer 1 ligne au-dessous</em>&nbsp;;</span>
+            <span class="where">2. copie la ligne <code>TSLA</code> entière et colle-la dans la nouvelle ligne&nbsp;;</span>
+            <span class="where">3. remplace <b style="color:var(--txt);font-weight:500">uniquement le symbole de la première colonne</b>. Ne touche à aucune autre cellule.</span>
+            <div class="check"><b>Pourquoi copier&nbsp;?</b> La ligne copiée embarque toutes les formules. Une ligne tapée à la main n'en aurait aucune.</div>
+          </div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.22s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">05</span> Contrôler le résultat</div>
+          <div class="step-desc">Ouvre <code>Essentials</code> puis <code>Composition</code>. Le nouveau titre doit y apparaître avec&nbsp;:
+            <span class="where">• le bon nombre de parts (Shares)&nbsp;;</span>
+            <span class="where">• une valeur en CHF (Total Value CHF), pas vide ni en erreur&nbsp;;</span>
+            <span class="where">• un pourcentage dans <code>Composition</code>.</span>
+            <div class="check"><b>Un problème&nbsp;?</b> Va voir le <a href="#" data-go="help" style="color:var(--green)">tableau de dépannage</a>.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="next"><button class="btn" data-go="clone">Suivant&nbsp;: créer un portefeuille →</button></div>
+  </section>
+
+  <!-- 5 ─ Créer un portefeuille -->
+  <section id="s-clone">
+    <div class="rise">
+      <div class="eyebrow">Nouveau portefeuille</div>
+      <h2>Créer un nouveau portefeuille</h2>
+      <p class="lede">On part d'une copie d'un portefeuille qui fonctionne, on la vide de ses données, on y met les nouvelles, puis on vérifie avec un test de 3 minutes. Compte une demi-heure.</p>
+    </div>
+    <div class="steps" data-track="clone">
+      <div class="step rise" style="animation-delay:.06s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">01</span> Copier un portefeuille existant</div>
+          <div class="step-desc">Dans le <a class="tab" id="lnkDrive2" href="#" target="_blank" rel="noopener">dossier Drive OpenFolio<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14L21 3"/><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/></svg></a>, fais un clic droit sur <b style="color:var(--txt);font-weight:500">TechnoPortfolio</b> → <em>Créer une copie</em>. Renomme tout de suite la copie, par exemple <code>FamilleFolio</code>.
+            <div class="check"><b>Pourquoi TechnoPortfolio&nbsp;?</b> C'est le fichier le plus complet et le plus à jour. Le fichier «&nbsp;Template Portfolio&nbsp;» est une ancienne version&nbsp;: il lui manque l'onglet <code>Engine</code>.</div>
+          </div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.1s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">02</span> Vider le journal des opérations</div>
+          <div class="step-desc">Dans <code>Transactions</code>, sélectionne tout <b style="color:var(--txt);font-weight:500">à partir de la ligne 2</b> (la ligne 1 contient les titres de colonnes, garde-la) et appuie sur <span class="kbd">Suppr</span>. Saisis ensuite le versement de départ en ligne 2&nbsp;: un <code>DEPOSIT</code> avec le montant initial.</div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.14s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">03</span> Remettre la courbe et les news à zéro</div>
+          <div class="step-desc">Dans <code>Evolution</code>, efface toutes les dates et valeurs à partir de la ligne 2. Fais de même dans <code>News</code>, sinon l'app afficherait les articles de l'autre portefeuille.</div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.18s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">04</span> Garder les bons titres</div>
+          <div class="step-desc">Dans <code>Prices</code> et dans <code>Engine</code>&nbsp;:
+            <span class="where">• supprime les lignes des titres qui ne feront pas partie de ce portefeuille. Supprime <b style="color:var(--txt);font-weight:500">la ligne entière</b> (clic droit sur son numéro → <em>Supprimer la ligne</em>), n'efface jamais juste le contenu des cellules&nbsp;;</span>
+            <span class="where">• ajoute les titres qui manquent avec la méthode <a href="#" data-go="ticker" style="color:var(--v2)">Ajouter un titre</a> (étapes 01, 03 et 04).</span>
+            <span class="where">Garde au moins une ligne de titre dans <code>Engine</code>&nbsp;: c'est elle que tu copieras pour les prochains.</span>
+          </div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.22s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">05</span> Rallumer la mise à jour du soir</div>
+          <div class="step-desc">Une copie n'emporte pas le réglage qui remplit la courbe chaque soir. Il faut le recréer&nbsp;:
+            <span class="where">1. dans le fichier, menu <em>Extensions → Apps Script</em>&nbsp;;</span>
+            <span class="where">2. à gauche, clique sur l'icône horloge <em>Déclencheurs</em> → bouton <em>Ajouter un déclencheur</em> en bas à droite&nbsp;;</span>
+            <span class="where">3. choisis ces réglages puis <em>Enregistrer</em>&nbsp;:</span>
+            <pre><code>Fonction à exécuter   : logOrUpdateDailyPortfolioValue
+Source de l'événement : En fonction du temps
+Type                  : Minuteur journalier
+Heure                 : 23h à minuit</code></pre>
+            <span class="where" style="margin-top:8px">4. Google demande ton autorisation&nbsp;: choisis ton compte → <em>Paramètres avancés</em> → <em>Accéder au projet</em> → <em>Autoriser</em>.</span>
+          </div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.26s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">T1</span> Test&nbsp;: le versement</div>
+          <div class="step-desc">Avec seulement le <code>DEPOSIT</code> de départ (ex. 10 000 CHF), <code>Essentials</code> doit afficher 10 000 de cash, soit 100 % de liquidités.</div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.3s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">T2</span> Test&nbsp;: un achat fictif</div>
+          <div class="step-desc">Ajoute un <code>BUY</code> d'essai (1 action d'un titre présent dans <code>Engine</code>). Dans <code>Essentials</code>, le cash doit baisser et la position apparaître. <b style="color:var(--txt);font-weight:500">Supprime ensuite cette ligne d'essai</b> (ligne entière).</div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.34s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">T3</span> Test&nbsp;: le script</div>
+          <div class="step-desc">Dans <em>Apps Script</em>, choisis <code>logOrUpdateDailyPortfolioValue</code> dans la liste en haut et clique sur <em>Exécuter</em>. La valeur du jour doit apparaître en ligne 2 de <code>Evolution</code>.</div>
+        </div>
+      </div>
+      <div class="step rise" style="animation-delay:.38s">
+        <div class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="step-body">
+          <div class="step-title"><span class="step-num">06</span> Le faire apparaître dans l'app</div>
+          <div class="step-desc">Envoie le lien du nouveau fichier à Balder en précisant qui doit y avoir accès. Balder l'ajoute à l'app OpenFolio et ouvre les accès&nbsp;: cette étape ne se fait pas depuis le fichier.</div>
+        </div>
+      </div>
+    </div>
+    <div class="next"><button class="btn" data-go="help">Suivant&nbsp;: règles d'or &amp; dépannage →</button></div>
+  </section>
+
+  <!-- 6 ─ Règles d'or & dépannage -->
+  <section id="s-help">
+    <div class="rise">
+      <div class="eyebrow">Quand ça coince</div>
+      <h2>Règles d'or &amp; dépannage</h2>
+      <p class="lede">Presque tous les problèmes viennent de l'une de ces trois erreurs. Les connaître suffit à les éviter.</p>
+    </div>
+
+    <h3 class="rise" style="animation-delay:.04s">Les 3 règles d'or</h3>
+    <div class="alert a-red rise" style="animation-delay:.06s">
+      <div class="ico"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div>
+      <div><h4>1. Ne jamais écrire dans un onglet calculé</h4><p><code>Essentials</code>, <code>Composition</code>, <code>Engine</code> (hors ajout de titre) et <code>TestJSON</code> se remplissent seuls à partir de <code>Transactions</code>. Si un chiffre y est faux, corrige la transaction d'origine, jamais le chiffre lui-même.</p></div>
+    </div>
+    <div class="alert a-amb rise" style="animation-delay:.08s">
+      <div class="ico"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+      <div><h4>2. Pas de ligne vide dans Transactions</h4><p>Chaque nouvelle opération va sur la première ligne libre, juste sous la précédente. Une ligne vide au milieu coupe les calculs. Pour supprimer une opération, supprime la ligne entière.</p></div>
+    </div>
+    <div class="alert a-amb rise" style="animation-delay:.1s">
+      <div class="ico"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+      <div><h4>3. Toujours copier une ligne existante</h4><p>Pour ajouter un titre dans <code>Prices</code> ou <code>Engine</code>, copie une ligne qui marche puis change le symbole. Une ligne tapée à la main n'a pas les formules.</p></div>
+    </div>
+
+    <h3 class="rise" style="animation-delay:.12s">Dépannage</h3>
+    <div class="tbl-wrap rise" style="animation-delay:.14s">
+      <table class="t">
+        <thead><tr><th>Ce que tu vois</th><th>Cause probable</th><th>Ce que tu fais</th></tr></thead>
+        <tbody>
+          <tr><td><b><code>#N/A</code> dans Prices</b></td><td>Le code Google Finance est faux (mauvaise bourse).</td><td>Teste un autre préfixe de bourse (<a href="#" data-go="ticker" style="color:var(--v2)">étape 01</a>).</td></tr>
+          <tr><td><b>Le titre n'apparaît pas dans Essentials</b></td><td>Il manque sa ligne dans <code>Engine</code>, ou le symbole est écrit différemment.</td><td>Vérifie que le symbole est identique (majuscules, point, tiret) dans <code>Transactions</code>, <code>Prices</code> et <code>Engine</code>.</td></tr>
+          <tr><td><b>Une opération n'est pas prise en compte</b></td><td>Type mal écrit (<code>Buy</code> au lieu de <code>BUY</code>), date au mauvais format, ou ligne vide juste au-dessus.</td><td>Corrige la ligne dans <code>Transactions</code>.</td></tr>
+          <tr><td><b>Le nombre de parts est faux</b></td><td>Une opération manque ou est en double, ou le titre a fait un split.</td><td>Relis les lignes du titre dans <code>Transactions</code>. En cas de split, préviens Balder.</td></tr>
+          <tr><td><b>La courbe Evolution n'avance plus</b></td><td>La mise à jour du soir n'est pas active sur ce fichier.</td><td>Refais l'<a href="#" data-go="clone" style="color:var(--v2)">étape 05 de Créer un portefeuille</a>, puis le test T3.</td></tr>
+          <tr><td><b>Gros saut soudain sur la courbe</b></td><td>Opération saisie deux fois, ou split pas pris en compte.</td><td>Cherche une opération en double à cette date. Sinon, préviens Balder.</td></tr>
+          <tr><td><b>L'app n'affiche pas un changement</b></td><td>L'app relit le fichier régulièrement, pas instantanément.</td><td>Attends la prochaine mise à jour. Si rien ne change le lendemain, préviens Balder.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="foot-note rise" style="animation-delay:.16s">Un doute avant de modifier quelque chose&nbsp;? <b style="color:var(--txt);font-weight:500">Fais d'abord une copie du fichier</b> (<em>Fichier → Créer une copie</em>) et essaie sur la copie. Google Sheets garde aussi l'historique de toutes les versions&nbsp;: <em>Fichier → Historique des versions</em> permet de revenir en arrière.</div>
+  </section>
+</main>
+</div>
+
+<script>
+/* ═══ Liens Drive OpenFolio ═══════════════════════════════════
+   Pour que les liens d'onglet ouvrent directement le bon onglet,
+   renseigne son gid (visible dans l'URL après #gid= quand l'onglet
+   est ouvert dans TechnoPortfolio).                               */
+const DRIVE = 'https://drive.google.com/drive/folders/1pnDwsZX4NBKPuIYBz8dE8VSgd-3FbsIc';
+const SHEET = 'https://docs.google.com/spreadsheets/d/1dwAv0Kh6DBMk13uRh62pseNkqwG1VyxxUH7WH-wDCyY';
+const FORM  = 'https://docs.google.com/forms/d/1dBHsvSXLDHiLbXQVEgo0Ts5h6aOM-ovlwF5GFK-_TBg/viewform';
+
+const GIDS = {
+  Transactions:null, Prices:null, Engine:null, Essentials:null,
+  Composition:null, Evolution:null, News:null, TestJSON:null
+};
+
+const FILES = [
+  {n:'TechnoPortfolio', d:'Portefeuille actions & ETF',      u:SHEET+'/edit'},
+  {n:'CryptoFolio',     d:'Portefeuille crypto',             u:'https://docs.google.com/spreadsheets/d/1fuVcxF7MvdDsMtfcgN0pQUD-R7Q48MUZyzyirTmV11s/edit'},
+  {n:'IndirectCrypto',  d:'Exposition crypto indirecte',     u:'https://docs.google.com/spreadsheets/d/1XoHRAYz65lMx82GLi8KliHdTc-gZwmmOZUB-Rd1FuXM/edit'},
+  {n:'ImmoPortfolio',   d:'Portefeuille immobilier',         u:'https://docs.google.com/spreadsheets/d/17anxSIuIFRtbSr3kPwDR1eHZglt_xfMdfl0rBsAWavA/edit'},
+  {n:'New Transaction', d:'Formulaire de saisie',            u:FORM},
+  {n:'Price Engine',    d:'Technique · cotations partagées', u:'https://docs.google.com/spreadsheets/d/1hF7RA9QWUU3UiwZgnIoxvBMQvJzWV3NPh9WKBwe36NM/edit'},
+  {n:'OpenFolio Yahoo Prices', d:'Technique · source de prix Yahoo', u:'https://docs.google.com/spreadsheets/d/1VfcxSAFNnnzK9fVCoGPaRncSIH-DpGit4ozpojcqNkI/edit'},
+  {n:'Template Portfolio', d:'Ancienne version · ne plus utiliser', u:'https://docs.google.com/spreadsheets/d/1kKX6jFyFh2OfAAX5Y2hRFKYch0BxpqE3k-JPGXjPBfk/edit'}
+];
+
+const EXT = '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14L21 3"/><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/></svg>';
+const tabUrl = n => SHEET + '/edit' + (GIDS[n]!=null ? '#gid='+GIDS[n] : '');
+const $ = id => document.getElementById(id);
+
+$('lnkDrive').href = DRIVE;
+$('lnkDrive2').href = DRIVE;
+$('lnkSheet').href = SHEET + '/edit';
+$('lnkForm').href = FORM;
+$('lnkFormSide').href = FORM;
+
+const FICO = '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>';
+$('filesGrid').innerHTML =
+  FILES.map(f=>`<a href="${f.u}" target="_blank" rel="noopener"><span class="fi">${FICO}</span><span><b>${f.n}</b><small>${f.d}</small></span></a>`).join('')
+  + `<a href="${DRIVE}" target="_blank" rel="noopener"><span class="fi"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 002-2V8a2 2 0 00-2-2h-7.9a2 2 0 01-1.7-.9l-.9-1.2A2 2 0 008.8 3H4a2 2 0 00-2 2v13a2 2 0 002 2z"/></svg></span><span><b>Ouvrir le dossier</b><small>Drive OpenFolio</small></span></a>`;
+
+document.querySelectorAll('.flow b[data-tab]').forEach(b=>{
+  b.title = 'Ouvrir l\'onglet ' + b.dataset.tab + ' dans TechnoPortfolio';
+  b.addEventListener('click', ()=>window.open(tabUrl(b.dataset.tab),'_blank','noopener'));
+});
+
+/* Chaque <code>NomOnglet</code> devient un lien vers l'onglet de TechnoPortfolio */
+document.querySelectorAll('main code').forEach(c=>{
+  const n = c.textContent.trim();
+  if(!(n in GIDS)) return;
+  const a = document.createElement('a');
+  a.className='tab'; a.href=tabUrl(n); a.target='_blank'; a.rel='noopener';
+  a.innerHTML = n + EXT;
+  a.title = 'Ouvrir l\'onglet ' + n + ' dans TechnoPortfolio';
+  a.addEventListener('click', e=>e.stopPropagation());
+  c.replaceWith(a);
+});
+
+/* ═══ Navigation ═══ */
+const SECTIONS = [
+  {id:'start',  label:'Par où commencer',      n:'1'},
+  {id:'how',    label:'Comment ça marche',     n:'2'},
+  {id:'op',     label:'Saisir une opération',  n:'3'},
+  {id:'ticker', label:'Ajouter un titre',      n:'4'},
+  {id:'clone',  label:'Créer un portefeuille', n:'5'},
+  {id:'help',   label:'Règles d\'or & dépannage', n:'6'}
+];
+const nav = $('nav'), mnav = $('mobileNav');
+SECTIONS.forEach(s=>{
+  const html = `<span class="idx">${s.n}</span><span>${s.label}</span><span class="dot"></span>`;
+  [nav, mnav].forEach(host=>{
+    const d = document.createElement('div');
+    d.className='nav-item'; d.dataset.target=s.id; d.innerHTML=html; host.appendChild(d);
+  });
+});
+const mProg = document.createElement('div');
+mProg.className='m-prog';
+mProg.innerHTML='<span id="mPct">0%</span><span class="bar"><i id="mBar"></i></span>';
+mnav.appendChild(mProg);
+
+function show(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on', s.id==='s-'+id));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('on', n.dataset.target===id));
+  document.querySelectorAll('#s-'+id+' .rise').forEach(el=>{
+    el.style.animation='none'; void el.offsetWidth; el.style.animation='';
+  });
+  try{ history.replaceState(null,'','#'+id); }catch(e){}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',()=>show(n.dataset.target)));
+document.addEventListener('click',e=>{
+  const t = e.target.closest('[data-go]'); if(!t) return;
+  e.preventDefault(); e.stopPropagation(); show(t.dataset.go);
+});
+const startId = (location.hash||'').slice(1);
+show(SECTIONS.some(s=>s.id===startId) ? startId : 'start');
+
+/* ═══ Checklists (mémorisées dans ce navigateur) ═══ */
+const KEY = 'openfolio-guide-v8';
+let saved = {};
+try{ saved = JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+const steps = Array.from(document.querySelectorAll('.step'));
+steps.forEach((s,i)=>{ s.dataset.k = (s.closest('[data-track]')||{}).dataset?.track+'-'+i; if(saved[s.dataset.k]) s.classList.add('ok'); });
+
+const ringFg = $('ringFg'), ringTxt = $('ringTxt'), progSub = $('progSub');
+const C = 2*Math.PI*22;
+ringFg.style.strokeDasharray = C;
+
+function refresh(){
+  const done = steps.filter(s=>s.classList.contains('ok')).length;
+  const pct = steps.length ? Math.round(done/steps.length*100) : 0;
+  ringFg.style.strokeDashoffset = C - (C*pct/100);
+  ringTxt.textContent = pct+'%';
+  progSub.textContent = `${done} / ${steps.length} étapes cochées`;
+  $('mPct').textContent = pct+'%';
+  $('mBar').style.width = pct+'%';
+  document.querySelectorAll('section').forEach(sec=>{
+    const list = sec.querySelectorAll('.step');
+    if(!list.length) return;
+    const all = Array.from(list).every(s=>s.classList.contains('ok'));
+    const id = sec.id.replace('s-','');
+    document.querySelectorAll(`.nav-item[data-target="${id}"]`).forEach(n=>n.classList.toggle('done', all));
+  });
+  const st = {}; steps.forEach(s=>{ if(s.classList.contains('ok')) st[s.dataset.k]=1; });
+  try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){}
+}
+steps.forEach(s=>s.addEventListener('click',e=>{
+  if(e.target.closest('a,code,pre,.check')) return;
+  s.classList.toggle('ok'); refresh();
+}));
+refresh();
+
+/* Halo au survol des cartes */
+document.querySelectorAll('.card').forEach(c=>{
+  c.addEventListener('mousemove',e=>{
+    const r=c.getBoundingClientRect();
+    c.style.setProperty('--mx',(e.clientX-r.left)+'px');
+    c.style.setProperty('--my',(e.clientY-r.top)+'px');
+  });
+});
+
+/* Raccourcis clavier 1–6 */
+document.addEventListener('keydown',e=>{
+  if(e.target.closest('input,textarea')) return;
+  const i = parseInt(e.key,10);
+  if(i>=1 && i<=SECTIONS.length && !e.metaKey && !e.ctrlKey && !e.altKey) show(SECTIONS[i-1].id);
+});
+</script>
+</body>
+</html>
